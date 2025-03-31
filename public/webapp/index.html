@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="draw.js"></script>
+        <script src="button.js"></script>
+        <script>
+            const urlParams = new URLSearchParams(window.location.search);
+            const fileID = urlParams.get('id');
+
+            document.addEventListener('DOMContentLoaded', async () => {
+                const editLink = document.createElement('a');
+                editLink.href = getEditLink(fileID);
+                document.body.appendChild(editLink);
+
+                const htmlContainer = document.createElement('div');
+                htmlContainer.innerHTML = await getSVG(fileID);
+                editLink.appendChild(htmlContainer);
+
+                addButton(document, fileID);
+            });
+        </script>
+        <link rel="stylesheet" href="index.css">
+    </head>
+    <body>
+    </body>
+</html>

@@ -1,0 +1,75 @@
+import {ITabModel, openTab, Plugin} from "siyuan"
+import Editor, {BaseWidget, EditorEventType} from "js-draw";
+import { MaterialIconProvider } from '@js-draw/material-icons';
+import 'js-draw/styles';
+import {getFile, saveFile} from "@/file";
+import {JSON_MIME, SVG_MIME, TOOLBAR_PATH} from "@/const";
+import {idToPath} from "@/helper";
+
+export function openEditorTab(p: Plugin, fileID: string) {
+    openTab({
+        app: p.app,
+        custom: {
+            title: 'Drawing',
+            icon: 'iconDraw',
+            id: "siyuan-jsdraw-pluginwhiteboard",
+            data: { id: fileID }
+        }
+    });
+}
+
+async function saveCallback(editor: Editor, fileID: string, saveButton: BaseWidget) {
+    const svgElem = editor.toSVG();
+    try {
+        saveFile(idToPath(fileID), SVG_MIME, svgElem.outerHTML);
+        saveButton.setDisabled(true);
+        setTimeout(() => { // @todo improve save button feedback
+            saveButton.setDisabled(false);
+        }, 500);
+    } catch (error) {
+        alert("Error saving drawing! Enter developer mode to find the error, and a copy of the current status.");
+        console.error(error);
+        console.log("Couldn't save SVG: ", svgElem.outerHTML)
+    }
+
+}
+
+export function createEditor(i: ITabModel) {
+
+    const fileID = i.data.id;
+    if(fileID == null) {
+        alert("File ID missing - couldn't open file.")
+        return;
+    }
+
+    const editor = new Editor(i.element, {
+        iconProvider: new MaterialIconProvider(),
+    });
+
+    const toolbar = editor.addToolbar();
+
+    // restore toolbar state
+    getFile(TOOLBAR_PATH).then(toolbarState => {
+        if(toolbarState!= null) {
+            toolbar.deserializeState(toolbarState)
+        }
+    });
+    // restore drawing
+    getFile(idToPath(fileID)).then(svg => {
+        if(svg != null) {
+            editor.loadFromSVG(svg);
+        }
+    });
+
+    // save logic
+    const saveButton = toolbar.addSaveButton(() => saveCallback(editor, fileID, saveButton));
+
+    // save toolbar config on tool change (toolbar state is not saved in SVGs!)
+    editor.notifier.on(EditorEventType.ToolUpdated, () => {
+        saveFile(TOOLBAR_PATH, JSON_MIME, toolbar.serializeState());
+    });
+
+    editor.dispatch(editor.setBackgroundStyle({ autoresize: true }), false);
+    editor.getRootElement().style.height = '100%';
+
+}

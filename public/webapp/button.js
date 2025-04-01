@@ -1,6 +1,9 @@
 function copyEditLink(fileID) {
     navigator.clipboard.writeText(getEditLink(fileID));
 }
+function copyImageLink(fileID) {
+    navigator.clipboard.writeText(`![Drawing](assets/${fileID}.svg)`);
+}
 
 function refreshPage() {
     window.location.reload();
@@ -20,7 +23,7 @@ function addButton(document, fileID) {
     popupMenu.innerHTML = `
                         <button onclick="refreshPage()">Refresh</button>
                         <button onclick="copyEditLink('${fileID}')">Copy Direct Edit Link</button>
-                        
+                        <button onclick="copyImageLink('${fileID}')">Copy Image Link</button>
                     `;
     document.body.appendChild(popupMenu);
 
@@ -31,6 +34,7 @@ function addButton(document, fileID) {
 
     document.body.addEventListener('mouseleave', () => {
         floatingButton.style.display = 'none';
+        popupMenu.style.display = 'none';
     });
 
     // Toggle popup menu on button click

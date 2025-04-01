@@ -55,3 +55,36 @@ export function getPreviewHTML(id: string): string {
     <iframe src="${EMBED_PATH + id}&antiCache=0"></iframe>
     `
 }
+
+// given a tag (such as a div) containing an image as a child at any level, return the src of the image
+export function findImgSrc(element: HTMLElement): string | null {
+    // Base case: if current element is an image
+    if (element.tagName === 'IMG') {
+        const fullSrc = (element as HTMLImageElement).src;
+        // Extract the path after host:port using URL API
+        const url = new URL(fullSrc);
+        return url.pathname.startsWith('/assets/')
+            ? url.pathname.substring(1) // Remove leading slash
+            : null;
+    }
+
+    // Recursively check children
+    if (element.children) {
+        for (const child of Array.from(element.children)) {
+            const src = findImgSrc(child as HTMLElement);
+            if (src) return src;
+        }
+    }
+
+    return null;
+}
+
+export function extractFileID(imgSrc: string | null): string | null {
+    if (!imgSrc) return null;
+
+    const [pathPart] = imgSrc.split('?');
+    // Match pattern: assets/{fileID}.svg
+    const match = pathPart.match(/^assets\/([^\/]+)\.svg$/i);
+
+    return match?.[1] || null;
+}

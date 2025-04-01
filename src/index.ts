@@ -1,12 +1,11 @@
 import {Plugin, Protyle} from 'siyuan';
-import {getPreviewHTML, loadIcons, getMenuHTML, generateSiyuanId} from "@/helper";
+import {getPreviewHTML, loadIcons, getMenuHTML, generateSiyuanId, findImgSrc, extractFileID} from "@/helper";
 import {createEditor, openEditorTab} from "@/editorTab";
 
 export default class DrawJSPlugin extends Plugin {
     onload() {
 
         loadIcons(this);
-        //const id = Math.random().toString(36).substring(7);
         this.addTab({
             'type': "whiteboard",
             init() {
@@ -25,20 +24,21 @@ export default class DrawJSPlugin extends Plugin {
             }
         }];
 
+        this.eventBus.on("open-menu-image", (e: any) => {
+            const fileID = extractFileID(findImgSrc(e.detail.element));
+            if(fileID === null) {
+                return;
+            }
+            console.log("got ID" + fileID);
+            e.detail.menu.addItem({
+                icon: "iconDraw",
+                label: "Edit with js-draw",
+                click: () => {
+                    openEditorTab(this, fileID);
+                }
+            })
+        })
+
     }
-
-    onLayoutReady() {
-        // This function is automatically called when the layout is loaded.
-    }
-
-    onunload() {
-        // This function is automatically called when the plugin is disabled.
-    }
-
-    uninstall() {
-        // This function is automatically called when the plugin is uninstalled.
-    }
-
-
 
 }

@@ -4,26 +4,23 @@
 This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan documents.  
 
 ## Usage instructions
-1. Install the plugin
-   - Grab a release from the [Releases page](https://git.massive.box/massivebox/siyuan-jsdraw-plugin/releases)
-   - Unzip it in the folder `./data/plugins`, relatively to your SiYuan workspace.
-   > The plugin is not yet available in the official marketplace. I will try to publish it there soon!
-2. Insert a drawing in your documents by typing `/Insert Drawing` in your document, and selecting the correct menu entry
-3. The whiteboard editor will open in a new tab. Draw as you like, then click the Save button. It will also add a
-   drawing block to your document.
-4. Click the Gear icon > Refresh to refresh the drawing block, if it's still displaying the old drawing.
-5. Click the drawing block to open the editor again.
+- Install the plugin from the marketplace. You can find it by searching for `js-draw`.
+- To edit an SVG image that is already embedded in your document:
+  1. Right-click on the image, select "Plugin" > "Edit with js-draw" in the menu
+  2. The editor tab will open, edit your file as you like, then click the Save button and close the tab.
+  3. The image is updated, but SiYuan will still show the cached (old) image. This will be fixed in future releases, 
+     please be patient. Until them, you can refresh the editor or change the image path.
+- To add a new drawing to your document:
+  1. Type `/Insert Drawing` in your document, and select the correct menu entry
+  2. The whiteboard editor will open in a new tab. Draw as you like, then click the Save button and close the tab.
+  3. Click the Gear icon > Refresh to refresh the drawing block.
+  4. Click the drawing block to open the editor again.
 
 ## Planned features
-- [ ] Auto-reload drawing blocks on drawing change
-- [ ] Rename whiteboards
-- [ ] Improve internationalization framework
-- [ ] Default background color and grid options
-- [ ] Respecting user theme for the editor
-- And more!
+Check out the [Projects](https://git.massive.box/massivebox/siyuan-jsdraw-plugin/projects) tab!
 
 ## Contributing
-Contributions are always welcome! Right now, I'm working on the core functionality and fixing bugs.
+Contributions are always welcome! Right now, I'm working on the core functionality and fixing bugs.  
 After that is done, I will need help with the internationalization, as, unfortunately, I don't speak Chinese.  
 Please [contact me](mailto:box@massive.box) if you'd like to help!
 

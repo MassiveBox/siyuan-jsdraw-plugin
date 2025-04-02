@@ -6,22 +6,22 @@ import {getFile, saveFile} from "@/file";
 import {JSON_MIME, SVG_MIME, TOOLBAR_PATH} from "@/const";
 import {idToPath} from "@/helper";
 
-export function openEditorTab(p: Plugin, fileID: string) {
+export function openEditorTab(p: Plugin, path: string) {
     openTab({
         app: p.app,
         custom: {
             title: 'Drawing',
             icon: 'iconDraw',
             id: "siyuan-jsdraw-pluginwhiteboard",
-            data: { id: fileID }
+            data: { path: path }
         }
     });
 }
 
-async function saveCallback(editor: Editor, fileID: string, saveButton: BaseWidget) {
+async function saveCallback(editor: Editor, path: string, saveButton: BaseWidget) {
     const svgElem = editor.toSVG();
     try {
-        saveFile(idToPath(fileID), SVG_MIME, svgElem.outerHTML);
+        saveFile(path, SVG_MIME, svgElem.outerHTML);
         saveButton.setDisabled(true);
         setTimeout(() => { // @todo improve save button feedback
             saveButton.setDisabled(false);
@@ -36,10 +36,14 @@ async function saveCallback(editor: Editor, fileID: string, saveButton: BaseWidg
 
 export function createEditor(i: ITabModel) {
 
-    const fileID = i.data.id;
-    if(fileID == null) {
-        alert("File ID missing - couldn't open file.")
-        return;
+    let path = i.data.path;
+    if(path == null) {
+        const fileID = i.data.id; // legacy compatibility
+        if (fileID == null) {
+            alert("File ID and path missing - couldn't open file.")
+            return;
+        }
+        path = idToPath(fileID);
     }
 
     const editor = new Editor(i.element, {
@@ -55,14 +59,14 @@ export function createEditor(i: ITabModel) {
         }
     });
     // restore drawing
-    getFile(idToPath(fileID)).then(svg => {
+    getFile(path).then(svg => {
         if(svg != null) {
             editor.loadFromSVG(svg);
         }
     });
 
     // save logic
-    const saveButton = toolbar.addSaveButton(() => saveCallback(editor, fileID, saveButton));
+    const saveButton = toolbar.addSaveButton(() => saveCallback(editor, path, saveButton));
 
     // save toolbar config on tool change (toolbar state is not saved in SVGs!)
     editor.notifier.on(EditorEventType.ToolUpdated, () => {

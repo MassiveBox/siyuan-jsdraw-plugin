@@ -45,14 +45,14 @@ export function generateSiyuanId() {
 }
 
 export function idToPath(id: string) {
-    return DATA_PATH + '/' + id + '.svg';
+    return DATA_PATH + id + '.svg';
 }
 
 //    [Edit](siyuan://plugins/siyuan-jsdraw-pluginwhiteboard/?icon=iconDraw&title=Drawing&data={"id":"${id}"})
 //     ![Drawing](assets/${id}.svg)
-export function getPreviewHTML(id: string): string {
+export function getPreviewHTML(path: string): string {
     return `
-    <iframe src="${EMBED_PATH + id}&antiCache=0"></iframe>
+    <iframe src="${EMBED_PATH + path}&antiCache=0"></iframe>
     `
 }
 
@@ -60,12 +60,7 @@ export function getPreviewHTML(id: string): string {
 export function findImgSrc(element: HTMLElement): string | null {
     // Base case: if current element is an image
     if (element.tagName === 'IMG') {
-        const fullSrc = (element as HTMLImageElement).src;
-        // Extract the path after host:port using URL API
-        const url = new URL(fullSrc);
-        return url.pathname.startsWith('/assets/')
-            ? url.pathname.substring(1) // Remove leading slash
-            : null;
+        return (element as HTMLImageElement).src;
     }
 
     // Recursively check children
@@ -79,12 +74,15 @@ export function findImgSrc(element: HTMLElement): string | null {
     return null;
 }
 
-export function extractFileID(imgSrc: string | null): string | null {
+export function imgSrcToAbsolutePath(imgSrc: string | null): string | null {
     if (!imgSrc) return null;
 
-    const [pathPart] = imgSrc.split('?');
-    // Match pattern: assets/{fileID}.svg
-    const match = pathPart.match(/^assets\/([^\/]+)\.svg$/i);
+    const url = new URL(imgSrc);
+    imgSrc = decodeURIComponent(url.pathname);
 
-    return match?.[1] || null;
+    if(imgSrc.startsWith('/assets/')) {
+        return "/data" + imgSrc;
+    }
+    return null
+
 }

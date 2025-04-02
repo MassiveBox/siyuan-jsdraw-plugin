@@ -5,18 +5,22 @@
         <script src="button.js"></script>
         <script>
             const urlParams = new URLSearchParams(window.location.search);
-            const fileID = urlParams.get('id');
+            let path = urlParams.get('path');
+            if(path === null) {
+                const fileID = urlParams.get('id'); // legacy support
+                path = "/data/assets/" + fileID + ".svg";
+            }
 
             document.addEventListener('DOMContentLoaded', async () => {
                 const editLink = document.createElement('a');
-                editLink.href = getEditLink(fileID);
+                editLink.href = getEditLink(path);
                 document.body.appendChild(editLink);
 
                 const htmlContainer = document.createElement('div');
-                htmlContainer.innerHTML = await getSVG(fileID);
+                htmlContainer.innerHTML = await getSVG(path);
                 editLink.appendChild(htmlContainer);
 
-                addButton(document, fileID);
+                addButton(document, path);
             });
         </script>
         <link rel="stylesheet" href="index.css">

@@ -27,9 +27,9 @@ async function getFile(path) {
 
 }
 
-async function getSVG(fileID) {
+async function getSVG(path) {
 
-    const resp = await getFile("/data/assets/" + fileID + '.svg');
+    const resp = await getFile(path);
     if(resp == null) {
         return FALLBACK;
     }
@@ -37,10 +37,10 @@ async function getSVG(fileID) {
 
 }
 
-function getEditLink(fileID) {
+function getEditLink(path) {
     const data = encodeURIComponent(
         JSON.stringify({
-            id: fileID
+            path: path,
         })
     )
     return `siyuan://plugins/siyuan-jsdraw-pluginwhiteboard/?icon=iconDraw&title=Drawing&data=${data}`;

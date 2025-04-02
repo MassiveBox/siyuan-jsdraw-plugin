@@ -1,15 +1,15 @@
-function copyEditLink(fileID) {
-    navigator.clipboard.writeText(getEditLink(fileID));
+function copyEditLink(path) {
+    navigator.clipboard.writeText(getEditLink(path));
 }
-function copyImageLink(fileID) {
-    navigator.clipboard.writeText(`![Drawing](assets/${fileID}.svg)`);
+function copyImageLink(path) {
+    navigator.clipboard.writeText(`![Drawing](${path.replace("/data/", "")})`);
 }
 
 function refreshPage() {
     window.location.reload();
 }
 
-function addButton(document, fileID) {
+function addButton(document, path) {
 
     // Add floating button
     const floatingButton = document.createElement('button');
@@ -22,8 +22,8 @@ function addButton(document, fileID) {
     popupMenu.id = 'popupMenu';
     popupMenu.innerHTML = `
                         <button onclick="refreshPage()">Refresh</button>
-                        <button onclick="copyEditLink('${fileID}')">Copy Direct Edit Link</button>
-                        <button onclick="copyImageLink('${fileID}')">Copy Image Link</button>
+                        <button onclick="copyEditLink('${path}')">Copy Direct Edit Link</button>
+                        <button onclick="copyImageLink('${path}')">Copy Image Link</button>
                     `;
     document.body.appendChild(popupMenu);
 

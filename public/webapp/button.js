@@ -2,7 +2,7 @@ function copyEditLink(path) {
     navigator.clipboard.writeText(getEditLink(path));
 }
 function copyImageLink(path) {
-    navigator.clipboard.writeText(`![Drawing](${path.replace("/data/", "")})`);
+    navigator.clipboard.writeText(`![Drawing](${path})`);
 }
 
 function refreshPage() {

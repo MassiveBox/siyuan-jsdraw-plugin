@@ -8,7 +8,7 @@
             let path = urlParams.get('path');
             if(path === null) {
                 const fileID = urlParams.get('id'); // legacy support
-                path = "/data/assets/" + fileID + ".svg";
+                path = "assets/" + fileID + ".svg";
             }
 
             document.addEventListener('DOMContentLoaded', async () => {

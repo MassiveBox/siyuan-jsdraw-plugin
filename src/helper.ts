@@ -74,15 +74,20 @@ export function findImgSrc(element: HTMLElement): string | null {
     return null;
 }
 
-export function imgSrcToAbsolutePath(imgSrc: string | null): string | null {
+export function imgSrcToPath(imgSrc: string | null): string | null {
     if (!imgSrc) return null;
 
     const url = new URL(imgSrc);
     imgSrc = decodeURIComponent(url.pathname);
 
     if(imgSrc.startsWith('/assets/')) {
-        return "/data" + imgSrc;
+        return imgSrc.substring(1);
     }
     return null
 
+}
+
+// Helper to safely escape regex special characters
+export function escapeRegExp(string: string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

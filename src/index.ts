@@ -5,10 +5,10 @@ import {
     getMenuHTML,
     generateSiyuanId,
     findImgSrc,
-    imgSrcToAbsolutePath
+    imgSrcToPath
 } from "@/helper";
 import {createEditor, openEditorTab} from "@/editorTab";
-import {DATA_PATH} from "@/const";
+import {ASSETS_PATH} from "@/const";
 
 export default class DrawJSPlugin extends Plugin {
     onload() {
@@ -26,14 +26,14 @@ export default class DrawJSPlugin extends Plugin {
             filter: ["Insert Drawing", "Add drawing", "whiteboard", "freehand", "graphics", "jsdraw"],
             html: getMenuHTML("iconDraw", this.i18n.insertDrawing),
             callback: (protyle: Protyle) => {
-                const path = DATA_PATH + generateSiyuanId() + ".svg";
+                const path = ASSETS_PATH + generateSiyuanId() + ".svg";
                 protyle.insert(getPreviewHTML(path), true, false);
                 openEditorTab(this, path);
             }
         }];
 
         this.eventBus.on("open-menu-image", (e: any) => {
-            const path = imgSrcToAbsolutePath(findImgSrc(e.detail.element));
+            const path = imgSrcToPath(findImgSrc(e.detail.element));
             if(path === null) {
                 return;
             }

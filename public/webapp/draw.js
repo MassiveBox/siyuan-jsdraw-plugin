@@ -29,7 +29,7 @@ async function getFile(path) {
 
 async function getSVG(path) {
 
-    const resp = await getFile(path);
+    const resp = await getFile("/data/" + path);
     if(resp == null) {
         return FALLBACK;
     }

@@ -3,7 +3,7 @@ import Editor, {BaseWidget, EditorEventType} from "js-draw";
 import { MaterialIconProvider } from '@js-draw/material-icons';
 import 'js-draw/styles';
 import {getFile, saveFile} from "@/file";
-import {JSON_MIME, SVG_MIME, TOOLBAR_PATH} from "@/const";
+import {DATA_PATH, JSON_MIME, SVG_MIME, TOOLBAR_PATH} from "@/const";
 import {idToPath} from "@/helper";
 
 export function openEditorTab(p: Plugin, path: string) {
@@ -21,7 +21,7 @@ export function openEditorTab(p: Plugin, path: string) {
 async function saveCallback(editor: Editor, path: string, saveButton: BaseWidget) {
     const svgElem = editor.toSVG();
     try {
-        saveFile(path, SVG_MIME, svgElem.outerHTML);
+        saveFile(DATA_PATH + path, SVG_MIME, svgElem.outerHTML);
         saveButton.setDisabled(true);
         setTimeout(() => { // @todo improve save button feedback
             saveButton.setDisabled(false);
@@ -59,7 +59,7 @@ export function createEditor(i: ITabModel) {
         }
     });
     // restore drawing
-    getFile(path).then(svg => {
+    getFile(DATA_PATH + path).then(svg => {
         if(svg != null) {
             editor.loadFromSVG(svg);
         }

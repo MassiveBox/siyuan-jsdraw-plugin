@@ -1,12 +1,12 @@
 import {getBlockByID, sql, updateBlock} from "@/api";
-import {escapeRegExp} from "@/helper";
+import {DUMMY_HOST} from "@/const";
 
 export async function findImageBlocks(src: string) {
 
     const sqlQuery = `
         SELECT id, markdown 
         FROM blocks 
-        WHERE markdown like '%${src}%'
+        WHERE markdown like '%](${src}%' // "](" is to check it's an image src
     `;
 
     try {
@@ -30,7 +30,7 @@ export async function replaceBlockContent(
         }
 
         const originalContent = block.markdown;
-        const newContent = originalContent.replace(escapeRegExp(searchStr), replaceStr);
+        const newContent = originalContent.replaceAll(searchStr, replaceStr);
 
         if (newContent === originalContent) {
             return false;
@@ -43,4 +43,29 @@ export async function replaceBlockContent(
         console.error('Failed to replace block content:', error);
         return false;
     }
+}
+
+export async function replaceAntiCacheID(src: string) {
+
+    const search = encodeURI(src); // the API uses URI-encoded
+    // find blocks containing that image
+    const blocks = await findImageBlocks(search);
+
+    for(const block of blocks) {
+
+        // get all the image sources, with parameters
+        const markdown = block.markdown;
+        const imageRegex = /!\[.*?\]\((.*?)\)/g; // only get images
+        const sources = Array.from(markdown.matchAll(imageRegex))
+            .map(match => match[1])
+            .filter(source => source.startsWith(search)) // discard other images
+
+        for(const source of sources) {
+            const url = new URL(source, DUMMY_HOST);
+            url.searchParams.set('antiCache', Date.now().toString()); // set or replace antiCache
+            const newSource =  url.href.replace(DUMMY_HOST, '');
+            await replaceBlockContent(block.id, source, newSource);
+        }
+    }
+
 }

@@ -5,6 +5,7 @@ import 'js-draw/styles';
 import {getFile, saveFile} from "@/file";
 import {DATA_PATH, JSON_MIME, SVG_MIME, TOOLBAR_PATH} from "@/const";
 import {idToPath} from "@/helper";
+import {replaceAntiCacheID} from "@/protyle";
 
 export function openEditorTab(p: Plugin, path: string) {
     openTab({
@@ -22,6 +23,7 @@ async function saveCallback(editor: Editor, path: string, saveButton: BaseWidget
     const svgElem = editor.toSVG();
     try {
         saveFile(DATA_PATH + path, SVG_MIME, svgElem.outerHTML);
+        await replaceAntiCacheID(path);
         saveButton.setDisabled(true);
         setTimeout(() => { // @todo improve save button feedback
             saveButton.setDisabled(false);

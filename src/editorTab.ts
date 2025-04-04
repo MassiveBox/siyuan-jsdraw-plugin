@@ -1,13 +1,22 @@
-import {ITabModel, openTab, Plugin} from "siyuan"
+import {Dialog, getFrontend, ITabModel, openTab, Plugin} from "siyuan"
 import Editor, {BaseWidget, EditorEventType} from "js-draw";
 import { MaterialIconProvider } from '@js-draw/material-icons';
 import 'js-draw/styles';
 import {getFile, saveFile} from "@/file";
 import {DATA_PATH, JSON_MIME, SVG_MIME, TOOLBAR_PATH} from "@/const";
-import {idToPath} from "@/helper";
 import {replaceAntiCacheID} from "@/protyle";
+import {idToPath} from "@/helper";
 
 export function openEditorTab(p: Plugin, path: string) {
+    if(getFrontend() == "mobile") {
+        const dialog = new Dialog({
+            width: "100vw",
+            height: "100vh",
+            content: `<div id="DrawingPanel" style="width:100%; height: 100%;"></div>`,
+        });
+        createEditor(dialog.element.querySelector("#DrawingPanel"), path);
+        return;
+    }
     openTab({
         app: p.app,
         custom: {
@@ -36,19 +45,9 @@ async function saveCallback(editor: Editor, path: string, saveButton: BaseWidget
 
 }
 
-export function createEditor(i: ITabModel) {
+export function createEditor(element: HTMLElement, path: string) {
 
-    let path = i.data.path;
-    if(path == null) {
-        const fileID = i.data.id; // legacy compatibility
-        if (fileID == null) {
-            alert("File ID and path missing - couldn't open file.")
-            return;
-        }
-        path = idToPath(fileID);
-    }
-
-    const editor = new Editor(i.element, {
+    const editor = new Editor(element, {
         iconProvider: new MaterialIconProvider(),
     });
 
@@ -77,5 +76,20 @@ export function createEditor(i: ITabModel) {
 
     editor.dispatch(editor.setBackgroundStyle({ autoresize: true }), false);
     editor.getRootElement().style.height = '100%';
+
+}
+
+export function editorTabInit(tab: ITabModel) {
+
+    let path = tab.data.path;
+    if(path == null) {
+        const fileID = tab.data.id; // legacy compatibility
+        if (fileID == null) {
+            alert("File ID and path missing - couldn't open file.")
+            return;
+        }
+        path = idToPath(fileID);
+    }
+    createEditor(tab.element, path);
 
 }

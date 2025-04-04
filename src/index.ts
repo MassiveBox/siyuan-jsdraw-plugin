@@ -7,7 +7,7 @@ import {
     findImgSrc,
     imgSrcToPath
 } from "@/helper";
-import {createEditor, openEditorTab} from "@/editorTab";
+import {editorTabInit, openEditorTab} from "@/editorTab";
 import {ASSETS_PATH} from "@/const";
 
 export default class DrawJSPlugin extends Plugin {
@@ -16,9 +16,7 @@ export default class DrawJSPlugin extends Plugin {
         loadIcons(this);
         this.addTab({
             'type': "whiteboard",
-            init() {
-                createEditor(this);
-            }
+            init() { editorTabInit(this) }
         });
 
         this.protyleSlash = [{

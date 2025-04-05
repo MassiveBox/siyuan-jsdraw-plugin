@@ -1,11 +1,11 @@
 {
-  "name": "plugin-sample-vite-svelte",
-  "version": "0.3.6",
+  "name": "siyuan-jsdraw-plugin",
+  "version": "0.2.0",
   "type": "module",
-  "description": "This is a sample plugin based on vite and svelte for Siyuan (https://b3log.org/siyuan)",
-  "repository": "",
-  "homepage": "",
-  "author": "frostime",
+  "description": "Include a whiteboard for freehand drawing anywhere in your documents.",
+  "repository": "https://git.massive.box/massivebox/siyuan-jsdraw-plugin",
+  "homepage": "https://git.massive.box/massivebox/siyuan-jsdraw-plugin",
+  "author": "massivebox",
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development VITE_SOURCEMAP=inline vite build --watch",

@@ -3,11 +3,11 @@ import {getFile, uploadAsset} from "@/file";
 import {ASSETS_PATH, DATA_PATH, SVG_MIME} from "@/const";
 import {replaceBlockContent} from "@/protyle";
 import {generateRandomString, getMarkdownBlock} from "@/helper";
+import {Dialog} from "siyuan";
 
 export async function migrate() {
 
     let blocks = await findEmbedBlocks();
-    console.log(blocks);
     const found = blocks.length > 0;
 
     for(const block of blocks) {
@@ -15,12 +15,23 @@ export async function migrate() {
         if(oldFileID) {
             const newFileID = generateRandomString() + "-" +  oldFileID;
             const file = await getFile(DATA_PATH + ASSETS_PATH + oldFileID + ".svg");
-            console.log("file", file)
             const r = await uploadAsset(newFileID, SVG_MIME, file);
-            console.log("r", r);
             const newMarkdown = getMarkdownBlock(r.fileID, r.syncID);
             await replaceBlockContent(block.id, block.markdown, newMarkdown);
         }
+    }
+
+    if(found) {
+        new Dialog({
+            width: "90vw",
+            height: "90vh",
+            content: `
+                <iframe 
+                    style="width: 100%; height: 100%; background-color: white"
+                    src="https://notes.massive.box/YRpTbbxLiD" 
+                />
+            `
+        })
     }
 
 }

@@ -1,20 +1,16 @@
 
 # SiYuan js-draw Plugin
 
-This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan documents.  
+This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan documents.
 
 ## Usage instructions
-- Install the plugin from the marketplace. You can find it by searching for `js-draw`.
-- To edit an SVG image that is already embedded in your document:
-  1. Right-click on the image, select "Plugin" > "Edit with js-draw" in the menu
-  2. The editor tab will open, edit your file as you like, then click the Save button and close the tab.
-  3. The image is updated, but SiYuan will still show the cached (old) image. This will be fixed in future releases, 
-     please be patient. Until them, you can refresh the editor or change the image path.
+- Install the plugin from the marketplace. You can find it by searching for `js-draw`. 
 - To add a new drawing to your document:
   1. Type `/Insert Drawing` in your document, and select the correct menu entry
   2. The whiteboard editor will open in a new tab. Draw as you like, then click the Save button and close the tab.
-  3. Click the Gear icon > Refresh to refresh the drawing block.
-  4. Click the drawing block to open the editor again.
+- To edit the image later:
+  1. Right-click on the image (or click the three dots on mobile), select "Plugin" > "Edit with js-draw" in the menu
+  2. The editor tab will open, edit your file as you like, then click the Save button and close the tab.
 
 ## Planned features
 Check out the [Projects](https://git.massive.box/massivebox/siyuan-jsdraw-plugin/projects) tab!

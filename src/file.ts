@@ -11,8 +11,10 @@ function toFile(title: string, content: string, mimeType: string){
 export async function uploadAsset(fileID: string, mimeType: string, content: string) {
 
     const file = toFile(fileID + ".svg", content, mimeType);
+    console.log(1, file)
 
     let r = await upload('/' + ASSETS_PATH, [file]);
+    console.log(2, r)
     if(r.errFiles) {
         throw new Error("Failed to upload file");
     }

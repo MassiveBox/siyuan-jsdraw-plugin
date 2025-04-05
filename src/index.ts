@@ -7,6 +7,7 @@ import {
     imgSrcToIDs, generateTimeString, generateRandomString
 } from "@/helper";
 import {editorTabInit, openEditorTab} from "@/editorTab";
+import {migrate} from "@/migration";
 
 export default class DrawJSPlugin extends Plugin {
 
@@ -17,6 +18,7 @@ export default class DrawJSPlugin extends Plugin {
             'type': "whiteboard",
             init() { editorTabInit(this) }
         });
+        migrate()
 
         this.protyleSlash = [{
             id: "insert-drawing",

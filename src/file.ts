@@ -1,8 +1,23 @@
-import {getFileBlob, putFile} from "@/api";
+import {getFileBlob, putFile, upload} from "@/api";
+import {ASSETS_PATH} from "@/const";
+import {assetPathToIDs} from "@/helper";
 
 function toFile(title: string, content: string, mimeType: string){
     const blob = new Blob([content], { type: mimeType });
     return new File([blob], title, { type: mimeType });
+}
+
+// upload asset to the assets folder, return fileID and syncID
+export async function uploadAsset(fileID: string, mimeType: string, content: string) {
+
+    const file = toFile(fileID + ".svg", content, mimeType);
+
+    let r = await upload('/' + ASSETS_PATH, [file]);
+    if(r.errFiles) {
+        throw new Error("Failed to upload file");
+    }
+    return assetPathToIDs(r.succMap[file.name]);
+
 }
 
 export function saveFile(path: string, mimeType: string, content: string) {

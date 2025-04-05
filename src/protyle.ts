@@ -1,5 +1,5 @@
 import {getBlockByID, sql, updateBlock} from "@/api";
-import {DUMMY_HOST} from "@/const";
+import {IDsToAssetPath} from "@/helper";
 
 export async function findImageBlocks(src: string) {
 
@@ -45,9 +45,9 @@ export async function replaceBlockContent(
     }
 }
 
-export async function replaceAntiCacheID(src: string) {
+export async function replaceSyncID(fileID: string, oldSyncID: string, newSyncID: string) {
 
-    const search = encodeURI(src); // the API uses URI-encoded
+    const search = encodeURI(IDsToAssetPath(fileID, oldSyncID)); // the API uses URI-encoded
     // find blocks containing that image
     const blocks = await findImageBlocks(search);
 
@@ -61,9 +61,7 @@ export async function replaceAntiCacheID(src: string) {
             .filter(source => source.startsWith(search)) // discard other images
 
         for(const source of sources) {
-            const url = new URL(source, DUMMY_HOST);
-            url.searchParams.set('antiCache', Date.now().toString()); // set or replace antiCache
-            const newSource =  url.href.replace(DUMMY_HOST, '');
+            const newSource = IDsToAssetPath(fileID, newSyncID);
             await replaceBlockContent(block.id, source, newSource);
         }
     }

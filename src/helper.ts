@@ -1,5 +1,5 @@
 import { Plugin } from 'siyuan';
-import {DATA_PATH, EMBED_PATH} from "@/const";
+import {ASSETS_PATH} from "@/const";
 
 const drawIcon: string = `
 <symbol id="iconDraw" viewBox="0 0 28 28">
@@ -23,7 +23,7 @@ export function getMenuHTML(icon: string, text: string): string {
     `;
 }
 
-export function generateSiyuanId() {
+export function generateTimeString() {
     const now = new Date();
 
     const year = now.getFullYear().toString();
@@ -33,26 +33,45 @@ export function generateSiyuanId() {
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const seconds = now.getSeconds().toString().padStart(2, '0');
 
-    const timestamp = `${year}${month}${day}${hours}${minutes}${seconds}`;
+    return `${year}${month}${day}${hours}${minutes}${seconds}`;
+}
+
+export function generateRandomString() {
 
     const characters = 'abcdefghijklmnopqrstuvwxyz';
     let random = '';
     for (let i = 0; i < 7; i++) {
         random += characters.charAt(Math.floor(Math.random() * characters.length));
     }
+    return random;
 
-    return `${timestamp}-${random}`;
 }
 
-export function idToPath(id: string) {
-    return DATA_PATH + id + '.svg';
+export function IDsToAssetPath(fileID: string, syncID: string) {
+    return `${ASSETS_PATH}${fileID}-${syncID}.svg`
+}
+export function assetPathToIDs(assetPath: string): { fileID: string; syncID: string } | null {
+
+    const filename = assetPath.split('/').pop() || '';
+    if (!filename.endsWith('.svg')) return null;
+
+    // Split into [basename, extension] and check format
+    const [basename] = filename.split('.');
+    const parts = basename.split('-');
+
+    // Must contain exactly 2 hyphens separating 3 non-empty parts
+    if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return null;
+
+    return {
+        fileID: parts[0],
+        syncID: parts[1] + '-' + parts[2]
+    };
+
 }
 
-//    [Edit](siyuan://plugins/siyuan-jsdraw-pluginwhiteboard/?icon=iconDraw&title=Drawing&data={"id":"${id}"})
-//     ![Drawing](assets/${id}.svg)
-export function getPreviewHTML(path: string): string {
+export function getMarkdownBlock(fileID: string, syncID: string): string {
     return `
-    <iframe src="${EMBED_PATH + path}&antiCache=0"></iframe>
+    ![Drawing](${IDsToAssetPath(fileID, syncID)})
     `
 }
 
@@ -74,20 +93,13 @@ export function findImgSrc(element: HTMLElement): string | null {
     return null;
 }
 
-export function imgSrcToPath(imgSrc: string | null): string | null {
+export function imgSrcToIDs(imgSrc: string | null): { fileID: string; syncID: string } | null {
+
     if (!imgSrc) return null;
 
     const url = new URL(imgSrc);
     imgSrc = decodeURIComponent(url.pathname);
 
-    if(imgSrc.startsWith('/assets/')) {
-        return imgSrc.substring(1);
-    }
-    return null
+    return assetPathToIDs(imgSrc);
 
-}
-
-// Helper to safely escape regex special characters
-export function escapeRegExp(string: string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

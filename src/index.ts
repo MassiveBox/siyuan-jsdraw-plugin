@@ -1,16 +1,15 @@
 import {Plugin, Protyle} from 'siyuan';
 import {
-    getPreviewHTML,
+    getMarkdownBlock,
     loadIcons,
     getMenuHTML,
-    generateSiyuanId,
     findImgSrc,
-    imgSrcToPath
+    imgSrcToIDs, generateTimeString, generateRandomString
 } from "@/helper";
 import {editorTabInit, openEditorTab} from "@/editorTab";
-import {ASSETS_PATH} from "@/const";
 
 export default class DrawJSPlugin extends Plugin {
+
     onload() {
 
         loadIcons(this);
@@ -24,22 +23,21 @@ export default class DrawJSPlugin extends Plugin {
             filter: ["Insert Drawing", "Add drawing", "whiteboard", "freehand", "graphics", "jsdraw"],
             html: getMenuHTML("iconDraw", this.i18n.insertDrawing),
             callback: (protyle: Protyle) => {
-                const path = ASSETS_PATH + generateSiyuanId() + ".svg";
-                protyle.insert(getPreviewHTML(path), true, false);
-                openEditorTab(this, path);
+                const fileID = generateRandomString();
+                const syncID = generateTimeString() + '-' + generateRandomString();
+                protyle.insert(getMarkdownBlock(fileID, syncID), true, false);
+                openEditorTab(this, fileID, syncID);
             }
         }];
 
         this.eventBus.on("open-menu-image", (e: any) => {
-            const path = imgSrcToPath(findImgSrc(e.detail.element));
-            if(path === null) {
-                return;
-            }
+            const ids = imgSrcToIDs(findImgSrc(e.detail.element));
+            if(ids === null) return;
             e.detail.menu.addItem({
                 icon: "iconDraw",
                 label: "Edit with js-draw",
                 click: () => {
-                    openEditorTab(this, path);
+                    openEditorTab(this, ids.fileID, ids.syncID);
                 }
             })
         })

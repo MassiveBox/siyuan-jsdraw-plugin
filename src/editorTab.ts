@@ -2,20 +2,27 @@ import {Dialog, getFrontend, ITabModel, openTab, Plugin} from "siyuan"
 import Editor, {BaseWidget, EditorEventType} from "js-draw";
 import { MaterialIconProvider } from '@js-draw/material-icons';
 import 'js-draw/styles';
-import {getFile, saveFile} from "@/file";
+import {getFile, saveFile, uploadAsset} from "@/file";
 import {DATA_PATH, JSON_MIME, SVG_MIME, TOOLBAR_PATH} from "@/const";
-import {replaceAntiCacheID} from "@/protyle";
-import {idToPath} from "@/helper";
+import {replaceSyncID} from "@/protyle";
+import {IDsToAssetPath} from "@/helper";
+import {removeFile} from "@/api";
 
-export function openEditorTab(p: Plugin, path: string) {
+export function openEditorTab(p: Plugin, fileID: string, initialSyncID: string) {
     if(getFrontend() == "mobile") {
         const dialog = new Dialog({
             width: "100vw",
             height: "100vh",
             content: `<div id="DrawingPanel" style="width:100%; height: 100%;"></div>`,
         });
-        createEditor(dialog.element.querySelector("#DrawingPanel"), path);
+        createEditor(dialog.element.querySelector("#DrawingPanel"), fileID, initialSyncID);
         return;
+    }
+    for(const tab of p.getOpenedTab()["whiteboard"]) {
+        if(tab.data.fileID == fileID) {
+            alert("File is already open in another editor tab!");
+            return;
+        }
     }
     openTab({
         app: p.app,
@@ -23,16 +30,23 @@ export function openEditorTab(p: Plugin, path: string) {
             title: 'Drawing',
             icon: 'iconDraw',
             id: "siyuan-jsdraw-pluginwhiteboard",
-            data: { path: path }
+            data: {
+                fileID: fileID,
+                initialSyncID: initialSyncID
+            }
         }
     });
 }
 
-async function saveCallback(editor: Editor, path: string, saveButton: BaseWidget) {
+async function saveCallback(editor: Editor, fileID: string, oldSyncID: string, saveButton: BaseWidget): Promise<string> {
+
     const svgElem = editor.toSVG();
+    let newSyncID;
+
     try {
-        saveFile(DATA_PATH + path, SVG_MIME, svgElem.outerHTML);
-        await replaceAntiCacheID(path);
+        newSyncID = (await uploadAsset(fileID, SVG_MIME, svgElem.outerHTML)).syncID;
+        await replaceSyncID(fileID, oldSyncID, newSyncID);
+        await removeFile(DATA_PATH + IDsToAssetPath(fileID, oldSyncID));
         saveButton.setDisabled(true);
         setTimeout(() => { // @todo improve save button feedback
             saveButton.setDisabled(false);
@@ -41,11 +55,14 @@ async function saveCallback(editor: Editor, path: string, saveButton: BaseWidget
         alert("Error saving drawing! Enter developer mode to find the error, and a copy of the current status.");
         console.error(error);
         console.log("Couldn't save SVG: ", svgElem.outerHTML)
+        return oldSyncID;
     }
+
+    return newSyncID
 
 }
 
-export function createEditor(element: HTMLElement, path: string) {
+export function createEditor(element: HTMLElement, fileID: string, initialSyncID: string) {
 
     const editor = new Editor(element, {
         iconProvider: new MaterialIconProvider(),
@@ -60,14 +77,21 @@ export function createEditor(element: HTMLElement, path: string) {
         }
     });
     // restore drawing
-    getFile(DATA_PATH + path).then(svg => {
+    getFile(DATA_PATH +IDsToAssetPath(fileID, initialSyncID)).then(svg => {
         if(svg != null) {
             editor.loadFromSVG(svg);
         }
     });
 
+    let syncID = initialSyncID;
     // save logic
-    const saveButton = toolbar.addSaveButton(() => saveCallback(editor, path, saveButton));
+    const saveButton = toolbar.addSaveButton(() => {
+        saveCallback(editor, fileID, syncID, saveButton).then(
+            newSyncID => {
+                syncID = newSyncID
+            }
+        )
+    });
 
     // save toolbar config on tool change (toolbar state is not saved in SVGs!)
     editor.notifier.on(EditorEventType.ToolUpdated, () => {
@@ -81,15 +105,12 @@ export function createEditor(element: HTMLElement, path: string) {
 
 export function editorTabInit(tab: ITabModel) {
 
-    let path = tab.data.path;
-    if(path == null) {
-        const fileID = tab.data.id; // legacy compatibility
-        if (fileID == null) {
-            alert("File ID and path missing - couldn't open file.")
-            return;
-        }
-        path = idToPath(fileID);
+    const fileID = tab.data.fileID;
+    const initialSyncID = tab.data.initialSyncID;
+    if (fileID == null || initialSyncID == null) {
+        alert("File or Sync ID and path missing - couldn't open file.")
+        return;
     }
-    createEditor(tab.element, path);
+    createEditor(tab.element, fileID, initialSyncID);
 
 }

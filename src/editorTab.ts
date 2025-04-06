@@ -45,8 +45,18 @@ async function saveCallback(editor: Editor, fileID: string, oldSyncID: string, s
 
     try {
         newSyncID = (await uploadAsset(fileID, SVG_MIME, svgElem.outerHTML)).syncID;
-        await replaceSyncID(fileID, oldSyncID, newSyncID);
-        await removeFile(DATA_PATH + IDsToAssetPath(fileID, oldSyncID));
+        if(newSyncID != oldSyncID) {
+            const changed = await replaceSyncID(fileID, oldSyncID, newSyncID);
+            if(!changed) {
+                alert(
+                    "Error replacing old sync ID with new one! You may need to manually replace the file path." +
+                    "\nTry saving the drawing again. This is a bug, please open an issue as soon as you can." +
+                    "\nIf your document doesn't show the drawing, you can recover it from the SiYuan workspace directory."
+                );
+                return oldSyncID;
+            }
+            await removeFile(DATA_PATH + IDsToAssetPath(fileID, oldSyncID));
+        }
         saveButton.setDisabled(true);
         setTimeout(() => { // @todo improve save button feedback
             saveButton.setDisabled(false);

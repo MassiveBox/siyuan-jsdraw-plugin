@@ -50,6 +50,7 @@ export async function replaceSyncID(fileID: string, oldSyncID: string, newSyncID
     const search = encodeURI(IDsToAssetPath(fileID, oldSyncID)); // the API uses URI-encoded
     // find blocks containing that image
     const blocks = await findImageBlocks(search);
+    if(blocks.length === 0) return false;
 
     for(const block of blocks) {
 
@@ -62,8 +63,11 @@ export async function replaceSyncID(fileID: string, oldSyncID: string, newSyncID
 
         for(const source of sources) {
             const newSource = IDsToAssetPath(fileID, newSyncID);
-            await replaceBlockContent(block.id, source, newSource);
+            const changed = await replaceBlockContent(block.id, source, newSource);
+            if(!changed) return false
         }
+
     }
+    return true;
 
 }

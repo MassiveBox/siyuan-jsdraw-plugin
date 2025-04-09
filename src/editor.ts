@@ -1,0 +1,172 @@
+import {MaterialIconProvider} from "@js-draw/material-icons";
+import {getFile, saveFile, uploadAsset} from "@/file";
+import {DATA_PATH, JSON_MIME, SVG_MIME, TOOLBAR_PATH} from "@/const";
+import {IDsToAssetPath} from "@/helper";
+import Editor, {BaseWidget, EditorEventType} from "js-draw";
+import {Dialog, Plugin, openTab, getFrontend} from "siyuan";
+import {replaceSyncID} from "@/protyle";
+import {removeFile} from "@/api";
+
+export class PluginEditor {
+
+    private readonly element: HTMLElement;
+    private readonly editor: Editor;
+
+    private readonly fileID: string;
+    private syncID: string;
+    private readonly initialSyncID: string;
+
+    getElement(): HTMLElement { return this.element; }
+    getEditor(): Editor { return this.editor; }
+    getFileID(): string { return this.fileID; }
+    getSyncID(): string { return this.syncID; }
+    getInitialSyncID(): string { return this.initialSyncID; }
+
+    constructor(fileID: string, initialSyncID: string) {
+
+        this.element = document.createElement("div");
+        this.element.style.height = '100%';
+        this.editor = new Editor(this.element, {
+            iconProvider: new MaterialIconProvider(),
+        });
+
+        this.fileID = fileID;
+        this.initialSyncID = initialSyncID;
+        this.syncID = initialSyncID;
+
+        this.genToolbar()
+
+        // restore drawing
+        getFile(DATA_PATH +IDsToAssetPath(fileID, initialSyncID)).then(svg => {
+            if(svg != null) {
+                this.editor.loadFromSVG(svg);
+            }
+        });
+
+        this.editor.dispatch(this.editor.setBackgroundStyle({ autoresize: true }), false);
+        this.editor.getRootElement().style.height = '100%';
+
+    }
+
+    private async genToolbar() {
+
+        const toolbar = this.editor.addToolbar();
+
+        // restore toolbar state
+        const toolbarState = await getFile(TOOLBAR_PATH);
+        if (toolbarState != null) {
+            toolbar.deserializeState(toolbarState);
+        }
+
+        // save button
+        const saveButton = toolbar.addSaveButton(async () => {
+            await this.saveCallback(saveButton);
+        });
+
+        // save toolbar config on tool change (toolbar state is not saved in SVGs!)
+        this.editor.notifier.on(EditorEventType.ToolUpdated, () => {
+            saveFile(TOOLBAR_PATH, JSON_MIME, toolbar.serializeState());
+        });
+
+    }
+
+    private async saveCallback(saveButton: BaseWidget) {
+
+        const svgElem = this.editor.toSVG();
+        let newSyncID: string;
+        const oldSyncID = this.syncID;
+
+        try {
+            newSyncID = (await uploadAsset(this.fileID, SVG_MIME, svgElem.outerHTML)).syncID;
+            if(newSyncID != oldSyncID) {
+                const changed = await replaceSyncID(this.fileID, oldSyncID, newSyncID);
+                if(!changed) {
+                    alert(
+                        "Error replacing old sync ID with new one! You may need to manually replace the file path." +
+                        "\nTry saving the drawing again. This is a bug, please open an issue as soon as you can." +
+                        "\nIf your document doesn't show the drawing, you can recover it from the SiYuan workspace directory."
+                    );
+                    return;
+                }
+                await removeFile(DATA_PATH + IDsToAssetPath(this.fileID, oldSyncID));
+            }
+            saveButton.setDisabled(true);
+            setTimeout(() => { // @todo improve save button feedback
+                saveButton.setDisabled(false);
+            }, 500);
+        } catch (error) {
+            alert("Error saving drawing! Enter developer mode to find the error, and a copy of the current status.");
+            console.error(error);
+            console.log("Couldn't save SVG: ", svgElem.outerHTML)
+            return;
+        }
+
+        this.syncID = newSyncID;
+
+    }
+
+}
+
+export class EditorManager {
+
+    private editor: PluginEditor
+
+    constructor(editor: PluginEditor) {
+        this.editor = editor;
+    }
+
+    static registerTab(p: Plugin) {
+        p.addTab({
+            'type': "whiteboard",
+            init() {
+                const fileID = this.data.fileID;
+                const initialSyncID = this.data.initialSyncID;
+                if (fileID == null || initialSyncID == null) {
+                    alert("File or Sync ID and path missing - couldn't open file.")
+                    return;
+                }
+                const editor = new PluginEditor(fileID, initialSyncID);
+                this.element.appendChild(editor.getElement());
+            }
+        });
+    }
+
+    toTab(p: Plugin) {
+        for(const tab of p.getOpenedTab()["whiteboard"]) {
+            if(tab.data.fileID == this.editor.getFileID()) {
+                alert("File is already open in another editor tab!");
+                return;
+            }
+        }
+        openTab({
+            app: p.app,
+            custom: {
+                title: 'Drawing',
+                icon: 'iconDraw',
+                id: "siyuan-jsdraw-pluginwhiteboard",
+                data: {
+                    fileID: this.editor.getFileID(),
+                    initialSyncID: this.editor.getInitialSyncID()
+                }
+            }
+        });
+    }
+
+    toDialog() {
+        const dialog = new Dialog({
+            width: "100vw",
+            height: "100vh",
+            content: `<div id="DrawingPanel" style="width:100%; height: 100%;"></div>`,
+        });
+        dialog.element.querySelector("#DrawingPanel").appendChild(this.editor.getElement());
+    }
+
+    open(p: Plugin) {
+        if(getFrontend() != "mobile") {
+            this.toTab(p);
+        } else {
+            this.toDialog();
+        }
+    }
+
+}

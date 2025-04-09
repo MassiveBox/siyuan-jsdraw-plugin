@@ -6,18 +6,15 @@ import {
     findImgSrc,
     imgSrcToIDs, generateTimeString, generateRandomString
 } from "@/helper";
-import {editorTabInit, openEditorTab} from "@/editorTab";
 import {migrate} from "@/migration";
+import {EditorManager, PluginEditor} from "@/editor";
 
 export default class DrawJSPlugin extends Plugin {
 
     onload() {
 
         loadIcons(this);
-        this.addTab({
-            'type': "whiteboard",
-            init() { editorTabInit(this) }
-        });
+        EditorManager.registerTab(this);
         migrate()
 
         this.protyleSlash = [{
@@ -28,7 +25,7 @@ export default class DrawJSPlugin extends Plugin {
                 const fileID = generateRandomString();
                 const syncID = generateTimeString() + '-' + generateRandomString();
                 protyle.insert(getMarkdownBlock(fileID, syncID), true, false);
-                openEditorTab(this, fileID, syncID);
+                new EditorManager(new PluginEditor(fileID, syncID)).open(this)
             }
         }];
 
@@ -39,7 +36,7 @@ export default class DrawJSPlugin extends Plugin {
                 icon: "iconDraw",
                 label: "Edit with js-draw",
                 click: () => {
-                    openEditorTab(this, ids.fileID, ids.syncID);
+                    new EditorManager(new PluginEditor(ids.fileID, ids.syncID)).open(this)
                 }
             })
         })

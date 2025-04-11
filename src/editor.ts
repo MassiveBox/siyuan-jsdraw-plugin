@@ -1,16 +1,17 @@
 import {MaterialIconProvider} from "@js-draw/material-icons";
-import {getFile, saveFile, uploadAsset} from "@/file";
-import {DATA_PATH, JSON_MIME, SVG_MIME, TOOLBAR_PATH} from "@/const";
-import {IDsToAssetPath} from "@/helper";
+import {PluginAsset, PluginFile} from "@/file";
+import {JSON_MIME, STORAGE_PATH, SVG_MIME, TOOLBAR_FILENAME} from "@/const";
 import Editor, {BaseWidget, EditorEventType} from "js-draw";
 import {Dialog, Plugin, openTab, getFrontend} from "siyuan";
 import {replaceSyncID} from "@/protyle";
-import {removeFile} from "@/api";
 
 export class PluginEditor {
 
     private readonly element: HTMLElement;
     private readonly editor: Editor;
+
+    private drawingFile: PluginAsset;
+    private toolbarFile: PluginFile;
 
     private readonly fileID: string;
     private syncID: string;
@@ -34,12 +35,13 @@ export class PluginEditor {
         this.initialSyncID = initialSyncID;
         this.syncID = initialSyncID;
 
-        this.genToolbar()
+        this.genToolbar();
 
         // restore drawing
-        getFile(DATA_PATH +IDsToAssetPath(fileID, initialSyncID)).then(svg => {
-            if(svg != null) {
-                this.editor.loadFromSVG(svg);
+        this.drawingFile = new PluginAsset(fileID, initialSyncID, SVG_MIME);
+        this.drawingFile.loadFromSiYuanFS().then(() => {
+            if(this.drawingFile.getContent() != null) {
+                this.editor.loadFromSVG(this.drawingFile.getContent());
             }
         });
 
@@ -52,11 +54,13 @@ export class PluginEditor {
 
         const toolbar = this.editor.addToolbar();
 
-        // restore toolbar state
-        const toolbarState = await getFile(TOOLBAR_PATH);
-        if (toolbarState != null) {
-            toolbar.deserializeState(toolbarState);
-        }
+        // restore toolbarFile state
+        this.toolbarFile = new PluginFile(STORAGE_PATH, TOOLBAR_FILENAME, JSON_MIME);
+        this.toolbarFile.loadFromSiYuanFS().then(() => {
+            if(this.toolbarFile.getContent() != null) {
+                toolbar.deserializeState(this.toolbarFile.getContent());
+            }
+        });
 
         // save button
         const saveButton = toolbar.addSaveButton(async () => {
@@ -65,7 +69,8 @@ export class PluginEditor {
 
         // save toolbar config on tool change (toolbar state is not saved in SVGs!)
         this.editor.notifier.on(EditorEventType.ToolUpdated, () => {
-            saveFile(TOOLBAR_PATH, JSON_MIME, toolbar.serializeState());
+            this.toolbarFile.setContent(toolbar.serializeState());
+            this.toolbarFile.save();
         });
 
     }
@@ -77,18 +82,20 @@ export class PluginEditor {
         const oldSyncID = this.syncID;
 
         try {
-            newSyncID = (await uploadAsset(this.fileID, SVG_MIME, svgElem.outerHTML)).syncID;
-            if(newSyncID != oldSyncID) {
-                const changed = await replaceSyncID(this.fileID, oldSyncID, newSyncID);
+            this.drawingFile.setContent(svgElem.outerHTML);
+            await this.drawingFile.save();
+            newSyncID = this.drawingFile.getSyncID();
+            if(newSyncID != oldSyncID) { // supposed to replace protyle
+                const changed = await replaceSyncID(this.fileID, oldSyncID, newSyncID); // try to change protyle
                 if(!changed) {
                     alert(
                         "Error replacing old sync ID with new one! You may need to manually replace the file path." +
                         "\nTry saving the drawing again. This is a bug, please open an issue as soon as you can." +
                         "\nIf your document doesn't show the drawing, you can recover it from the SiYuan workspace directory."
                     );
-                    return;
+                    return; // don't delete old drawing if protyle unchanged (could cause confusion)
                 }
-                await removeFile(DATA_PATH + IDsToAssetPath(this.fileID, oldSyncID));
+                await this.drawingFile.removeOld(oldSyncID);
             }
             saveButton.setDisabled(true);
             setTimeout(() => { // @todo improve save button feedback

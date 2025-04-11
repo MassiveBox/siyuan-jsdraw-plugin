@@ -47,8 +47,11 @@ export function generateRandomString() {
 
 }
 
+export function IDsToAssetName(fileID: string, syncID: string) {
+    return `${fileID}-${syncID}.svg`;
+}
 export function IDsToAssetPath(fileID: string, syncID: string) {
-    return `${ASSETS_PATH}${fileID}-${syncID}.svg`
+    return `${ASSETS_PATH}${IDsToAssetName(fileID, syncID)}`
 }
 export function assetPathToIDs(assetPath: string): { fileID: string; syncID: string } | null {
 

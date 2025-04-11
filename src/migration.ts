@@ -1,5 +1,5 @@
 import {sql} from "@/api";
-import {getFile, uploadAsset} from "@/file";
+import {PluginAsset, PluginFile} from "@/file";
 import {ASSETS_PATH, DATA_PATH, SVG_MIME} from "@/const";
 import {replaceBlockContent} from "@/protyle";
 import {generateRandomString, getMarkdownBlock} from "@/helper";
@@ -13,11 +13,15 @@ export async function migrate() {
     for(const block of blocks) {
         const oldFileID = extractID(block.markdown);
         if(oldFileID) {
-            const newFileID = generateRandomString() + "-" +  oldFileID;
-            const file = await getFile(DATA_PATH + ASSETS_PATH + oldFileID + ".svg");
-            const r = await uploadAsset(newFileID, SVG_MIME, file);
-            const newMarkdown = getMarkdownBlock(r.fileID, r.syncID);
-            await replaceBlockContent(block.id, block.markdown, newMarkdown);
+            const oldFile = new PluginFile(DATA_PATH + ASSETS_PATH, oldFileID + '.svg', SVG_MIME);
+            await oldFile.loadFromSiYuanFS();
+            const newFile = new PluginAsset(generateRandomString(), oldFileID, SVG_MIME);
+            newFile.setContent(oldFile.getContent());
+            await newFile.save();
+            const newMarkdown = getMarkdownBlock(newFile.getFileID(), newFile.getSyncID());
+            if(await replaceBlockContent(block.id, block.markdown, newMarkdown)) {
+                await oldFile.remove();
+            }
         }
     }
 

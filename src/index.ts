@@ -8,14 +8,22 @@ import {
 } from "@/helper";
 import {migrate} from "@/migration";
 import {EditorManager, PluginEditor} from "@/editor";
+import {PluginConfig, PluginConfigViewer} from "@/config";
 
 export default class DrawJSPlugin extends Plugin {
 
-    onload() {
+    config: PluginConfig;
+
+    async onload() {
 
         loadIcons(this);
         EditorManager.registerTab(this);
         migrate()
+
+        this.config = new PluginConfig();
+        await this.config.load();
+        let configViewer = new PluginConfigViewer(this.config, this);
+        await configViewer.load();
 
         this.protyleSlash = [{
             id: "insert-drawing",
@@ -31,7 +39,7 @@ export default class DrawJSPlugin extends Plugin {
 
         this.eventBus.on("open-menu-image", (e: any) => {
             const ids = imgSrcToIDs(findImgSrc(e.detail.element));
-            if(ids === null) return;
+            if (ids === null) return;
             e.detail.menu.addItem({
                 icon: "iconDraw",
                 label: "Edit with js-draw",

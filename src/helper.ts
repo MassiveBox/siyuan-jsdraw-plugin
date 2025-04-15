@@ -106,3 +106,10 @@ export function imgSrcToIDs(imgSrc: string | null): { fileID: string; syncID: st
     return assetPathToIDs(imgSrc);
 
 }
+
+export function validateColor(hex: string) {
+    hex = hex.replace('#', '');
+    return typeof hex === 'string'
+        && hex.length === 6
+        && !isNaN(Number('0x' + hex))
+}

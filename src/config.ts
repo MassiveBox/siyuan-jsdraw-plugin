@@ -5,7 +5,7 @@ import {SettingUtils} from "@/libs/setting-utils";
 import {validateColor} from "@/helper";
 
 type Options = {
-    autoResize: boolean,
+    autoResize: boolean
     background: string
     analytics: boolean
 };
@@ -15,12 +15,16 @@ export class PluginConfig {
     private file: PluginFile;
 
     options: Options;
+    private firstRun: boolean;
+
+    getFirstRun() { return this.firstRun }
 
     constructor() {
         this.file = new PluginFile(STORAGE_PATH, CONFIG_FILENAME, JSON_MIME);
     }
 
     async load() {
+        this.firstRun = false;
         await this.file.loadFromSiYuanFS();
         this.options = JSON.parse(this.file.getContent());
         if(this.options == null) {
@@ -32,8 +36,9 @@ export class PluginConfig {
         this.options = {
             autoResize: true,
             background: "#000000",
-            analytics: true
+            analytics: true,
         };
+        this.firstRun = true;
     }
 
     async save() {
@@ -69,7 +74,11 @@ export class PluginConfigViewer {
         this.settingUtils = new SettingUtils({
             plugin: this.plugin,
             callback: async (data) => {
-                this.config.setConfig(data);
+                this.config.setConfig({
+                    analytics: data.analytics,
+                    autoResize: data.autoResize,
+                    background: data.background,
+                });
                 await this.config.save();
             }
         });
@@ -95,7 +104,7 @@ export class PluginConfigViewer {
             title: "Analytics",
             description: `
                 Enable to send anonymous usage data to the developer.
-                <a href='https://massive.box'>Privacy</a>
+                <a href='https://s.massive.box/jsdraw-plugin-privacy'>Privacy</a>
             `,
             value: this.config.options.analytics,
             type: 'checkbox'

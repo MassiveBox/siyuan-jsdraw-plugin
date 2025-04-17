@@ -6,6 +6,7 @@ import {Dialog, getFrontend, openTab, Plugin} from "siyuan";
 import {findSyncIDInProtyle, replaceSyncID} from "@/protyle";
 import DrawJSPlugin from "@/index";
 import {DefaultEditorOptions} from "@/config";
+import 'js-draw/styles';
 
 export class PluginEditor {
 
@@ -39,10 +40,21 @@ export class PluginEditor {
         });
 
         findSyncIDInProtyle(this.fileID).then(async (syncID) => {
+
+            if(syncID == null) {
+                alert(
+                    "Couldn't find SyncID in protyle for this file.\n" +
+                    "Make sure the drawing you're trying to edit exists in a note.\n" +
+                    "Close this editor tab now, and try to open the editor again."
+                );
+                return;
+            }
+
             this.syncID = syncID;
             // restore drawing
             this.drawingFile = new PluginAsset(this.fileID, syncID, SVG_MIME);
             await this.drawingFile.loadFromSiYuanFS();
+
             if(this.drawingFile.getContent() != null) {
                 await this.editor.loadFromSVG(this.drawingFile.getContent());
             }else{
@@ -53,6 +65,9 @@ export class PluginEditor {
                     autoresize: true
                 }));
             }
+
+        }).catch((error) => {
+            alert("Error loading drawing: " + error);
         });
 
     }
@@ -94,14 +109,7 @@ export class PluginEditor {
             newSyncID = this.drawingFile.getSyncID();
             if(newSyncID != oldSyncID) { // supposed to replace protyle
                 const changed = await replaceSyncID(this.fileID, oldSyncID, newSyncID); // try to change protyle
-                if(!changed) {
-                    alert(
-                        "Error replacing old sync ID with new one! You may need to manually replace the file path." +
-                        "\nTry saving the drawing again. This is a bug, please open an issue as soon as you can." +
-                        "\nIf your document doesn't show the drawing, you can recover it from the SiYuan workspace directory."
-                    );
-                    return; // don't delete old drawing if protyle unchanged (could cause confusion)
-                }
+                if(!changed) throw new Error("Couldn't replace old images in protyle");
                 await this.drawingFile.removeOld(oldSyncID);
             }
             saveButton.setDisabled(true);
@@ -109,7 +117,8 @@ export class PluginEditor {
                 saveButton.setDisabled(false);
             }, 500);
         } catch (error) {
-            alert("Error saving drawing! Enter developer mode to find the error, and a copy of the current status.");
+            alert("Error saving! The current drawing has been copied to your clipboard. You may need to create a new drawing and paste it there.");
+            await navigator.clipboard.writeText(svgElem.outerHTML);
             console.error(error);
             console.log("Couldn't save SVG: ", svgElem.outerHTML)
             return;
@@ -125,8 +134,8 @@ export class EditorManager {
 
     private editor: PluginEditor
 
-    constructor(editor: PluginEditor) {
-        this.editor = editor;
+    constructor(fileID: string, defaultEditorOptions: DefaultEditorOptions) {
+        this.editor = new PluginEditor(fileID, defaultEditorOptions);
     }
 
     static registerTab(p: DrawJSPlugin) {
@@ -161,7 +170,7 @@ export class EditorManager {
     toDialog() {
         const dialog = new Dialog({
             width: "100vw",
-            height: "100vh",
+            height: getFrontend() == "mobile" ? "100vh" : "90vh",
             content: `<div id="DrawingPanel" style="width:100%; height: 100%;"></div>`,
         });
         dialog.element.querySelector("#DrawingPanel").appendChild(this.editor.getElement());

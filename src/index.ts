@@ -7,7 +7,7 @@ import {
     imgSrcToIDs, generateTimeString, generateRandomString
 } from "@/helper";
 import {migrate} from "@/migration";
-import {EditorManager, PluginEditor} from "@/editor";
+import {EditorManager} from "@/editor";
 import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
 
@@ -34,7 +34,7 @@ export default class DrawJSPlugin extends Plugin {
                 const fileID = generateRandomString();
                 const syncID = generateTimeString() + '-' + generateRandomString();
                 protyle.insert(getMarkdownBlock(fileID, syncID), true, false);
-                new EditorManager(new PluginEditor(fileID, this.config.getDefaultEditorOptions())).open(this);
+                new EditorManager(fileID, this.config.getDefaultEditorOptions()).open(this);
             }
         }];
 
@@ -46,7 +46,7 @@ export default class DrawJSPlugin extends Plugin {
                 label: "Edit with js-draw",
                 click: () => {
                     void this.analytics.sendEvent('edit');
-                    new EditorManager(new PluginEditor(ids.fileID, this.config.getDefaultEditorOptions())).open(this)
+                    new EditorManager(ids.fileID, this.config.getDefaultEditorOptions()).open(this);
                 }
             })
         })

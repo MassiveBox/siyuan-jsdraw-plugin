@@ -121,7 +121,7 @@ export class PluginConfigViewer {
                 Dialog mode provides a larger drawing area, but it's not as handy to use as tabs (default).<br />
                 The editor will always open as a dialog on mobile.
             `,
-            value: this.config.options.grid,
+            value: this.config.options.dialogOnDesktop,
             type: 'checkbox'
         });
 

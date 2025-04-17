@@ -1,9 +1,11 @@
 import {MaterialIconProvider} from "@js-draw/material-icons";
 import {PluginAsset, PluginFile} from "@/file";
 import {JSON_MIME, STORAGE_PATH, SVG_MIME, TOOLBAR_FILENAME} from "@/const";
-import Editor, {BaseWidget, EditorEventType} from "js-draw";
-import {Dialog, Plugin, openTab, getFrontend} from "siyuan";
+import Editor, {BackgroundComponentBackgroundType, BaseWidget, Color4, EditorEventType} from "js-draw";
+import {Dialog, getFrontend, openTab, Plugin} from "siyuan";
 import {findSyncIDInProtyle, replaceSyncID} from "@/protyle";
+import DrawJSPlugin from "@/index";
+import {DefaultEditorOptions} from "@/config";
 
 export class PluginEditor {
 
@@ -21,7 +23,7 @@ export class PluginEditor {
     getFileID(): string { return this.fileID; }
     getSyncID(): string { return this.syncID; }
 
-    constructor(fileID: string) {
+    constructor(fileID: string, defaultEditorOptions: DefaultEditorOptions) {
 
         this.fileID = fileID;
 
@@ -43,6 +45,13 @@ export class PluginEditor {
             await this.drawingFile.loadFromSiYuanFS();
             if(this.drawingFile.getContent() != null) {
                 await this.editor.loadFromSVG(this.drawingFile.getContent());
+            }else{
+                // it's a new drawing
+                this.editor.dispatch(this.editor.setBackgroundStyle({
+                    color: Color4.fromHex(defaultEditorOptions.background),
+                    type: defaultEditorOptions.grid ? BackgroundComponentBackgroundType.Grid : BackgroundComponentBackgroundType.SolidColor,
+                    autoresize: true
+                }));
             }
         });
 
@@ -120,7 +129,7 @@ export class EditorManager {
         this.editor = editor;
     }
 
-    static registerTab(p: Plugin) {
+    static registerTab(p: DrawJSPlugin) {
         p.addTab({
             'type': "whiteboard",
             init() {
@@ -129,7 +138,7 @@ export class EditorManager {
                     alert("File ID missing - couldn't open file.")
                     return;
                 }
-                const editor = new PluginEditor(fileID);
+                const editor = new PluginEditor(fileID, p.config.getDefaultEditorOptions());
                 this.element.appendChild(editor.getElement());
             }
         });
@@ -158,8 +167,8 @@ export class EditorManager {
         dialog.element.querySelector("#DrawingPanel").appendChild(this.editor.getElement());
     }
 
-    async open(p: Plugin) {
-        if(getFrontend() != "mobile") {
+    async open(p: DrawJSPlugin) {
+        if(getFrontend() != "mobile" && !p.config.options.dialogOnDesktop) {
             this.toTab(p);
         } else {
             this.toDialog();

@@ -5,10 +5,16 @@ import {SettingUtils} from "@/libs/setting-utils";
 import {validateColor} from "@/helper";
 
 type Options = {
-    autoResize: boolean
+    grid: boolean
     background: string
+    dialogOnDesktop: boolean
     analytics: boolean
 };
+
+export type DefaultEditorOptions = {
+    grid: boolean
+    background: string
+}
 
 export class PluginConfig {
 
@@ -23,6 +29,13 @@ export class PluginConfig {
         this.file = new PluginFile(STORAGE_PATH, CONFIG_FILENAME, JSON_MIME);
     }
 
+    getDefaultEditorOptions(): DefaultEditorOptions {
+        return {
+            grid: this.options.grid,
+            background: this.options.background,
+        };
+    }
+
     async load() {
         this.firstRun = false;
         await this.file.loadFromSiYuanFS();
@@ -34,8 +47,9 @@ export class PluginConfig {
 
     private loadDefaultConfig() {
         this.options = {
-            autoResize: true,
+            grid: true,
             background: "#000000",
+            dialogOnDesktop: false,
             analytics: true,
         };
         this.firstRun = true;
@@ -75,28 +89,40 @@ export class PluginConfigViewer {
             plugin: this.plugin,
             callback: async (data) => {
                 this.config.setConfig({
-                    analytics: data.analytics,
-                    autoResize: data.autoResize,
+                    grid: data.grid,
                     background: data.background,
+                    dialogOnDesktop: data.dialogOnDesktop,
+                    analytics: data.analytics,
                 });
                 await this.config.save();
             }
         });
 
         this.settingUtils.addItem({
-            key: "autoResize",
-            title: "Auto Resize",
-            description: "Enable to automatically resize the drawing area according to your strokes on new drawings",
-            value: this.config.options.autoResize,
+            key: "grid",
+            title: "Enable grid by default",
+            description: "Enable to automatically turn on the grid on new drawings.",
+            value: this.config.options.grid,
             type: 'checkbox'
         });
 
         this.settingUtils.addItem({
             key: "background",
-            title: "Default Background Color",
+            title: "Default background Color",
             description: "Default background color of the drawing area for new drawings in hexadecimal.",
             value: this.config.options.background,
             type: 'textarea',
+        });
+
+        this.settingUtils.addItem({
+            key: "dialogOnDesktop",
+            title: "Open editor as dialog on desktop",
+            description: `
+                Dialog mode provides a larger drawing area, but it's not as handy to use as tabs (default).<br />
+                The editor will always open as a dialog on mobile.
+            `,
+            value: this.config.options.grid,
+            type: 'checkbox'
         });
 
         this.settingUtils.addItem({

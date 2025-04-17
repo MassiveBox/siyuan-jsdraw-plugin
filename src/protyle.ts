@@ -1,5 +1,37 @@
 import {getBlockByID, sql, updateBlock} from "@/api";
-import {IDsToAssetPath} from "@/helper";
+import {assetPathToIDs, IDsToAssetPath} from "@/helper";
+
+export async function findSyncIDInProtyle(fileID: string, iter?: number): Promise<string> {
+
+    const search = `assets/${fileID}-`;
+    const blocks = await findImageBlocks(search);
+
+    let syncID = null;
+
+    for(const block of blocks) {
+        const sources = extractImageSourcesFromMarkdown(block.markdown, search);
+        for(const source of sources) {
+            const ids = assetPathToIDs(source);
+            if(syncID == null) {
+                syncID = ids.syncID;
+            }else if(ids.syncID !== syncID) {
+                throw new Error("Multiple syncIDs found");
+            }
+        }
+    }
+
+    if(!iter) iter = 0;
+    if(syncID == null) {
+        // when the block has just been created, we need to wait a bit before it can be found
+        if(iter < 4) { // cap max time at 2s, it should be ok by then
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return await findSyncIDInProtyle(fileID, iter + 1);
+        }
+    }
+
+    return syncID;
+
+}
 
 export async function findImageBlocks(src: string) {
 
@@ -45,6 +77,13 @@ export async function replaceBlockContent(
     }
 }
 
+function extractImageSourcesFromMarkdown(markdown: string, mustStartWith?: string) {
+    const imageRegex = /!\[.*?\]\((.*?)\)/g; // only get images
+    return Array.from(markdown.matchAll(imageRegex))
+        .map(match => match[1])
+        .filter(source => source.startsWith(mustStartWith)) // discard other images
+}
+
 export async function replaceSyncID(fileID: string, oldSyncID: string, newSyncID: string) {
 
     const search = encodeURI(IDsToAssetPath(fileID, oldSyncID)); // the API uses URI-encoded
@@ -56,12 +95,8 @@ export async function replaceSyncID(fileID: string, oldSyncID: string, newSyncID
 
         // get all the image sources, with parameters
         const markdown = block.markdown;
-        const imageRegex = /!\[.*?\]\((.*?)\)/g; // only get images
-        const sources = Array.from(markdown.matchAll(imageRegex))
-            .map(match => match[1])
-            .filter(source => source.startsWith(search)) // discard other images
 
-        for(const source of sources) {
+        for(const source of extractImageSourcesFromMarkdown(markdown, search)) {
             const newSource = IDsToAssetPath(fileID, newSyncID);
             const changed = await replaceBlockContent(block.id, source, newSource);
             if(!changed) return false

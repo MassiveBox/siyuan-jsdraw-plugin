@@ -3,7 +3,7 @@ import {PluginAsset, PluginFile} from "@/file";
 import {JSON_MIME, STORAGE_PATH, SVG_MIME, TOOLBAR_FILENAME} from "@/const";
 import Editor, {BaseWidget, EditorEventType} from "js-draw";
 import {Dialog, Plugin, openTab, getFrontend} from "siyuan";
-import {replaceSyncID} from "@/protyle";
+import {findSyncIDInProtyle, replaceSyncID} from "@/protyle";
 
 export class PluginEditor {
 
@@ -15,15 +15,15 @@ export class PluginEditor {
 
     private readonly fileID: string;
     private syncID: string;
-    private readonly initialSyncID: string;
 
     getElement(): HTMLElement { return this.element; }
     getEditor(): Editor { return this.editor; }
     getFileID(): string { return this.fileID; }
     getSyncID(): string { return this.syncID; }
-    getInitialSyncID(): string { return this.initialSyncID; }
 
-    constructor(fileID: string, initialSyncID: string) {
+    constructor(fileID: string) {
+
+        this.fileID = fileID;
 
         this.element = document.createElement("div");
         this.element.style.height = '100%';
@@ -31,22 +31,20 @@ export class PluginEditor {
             iconProvider: new MaterialIconProvider(),
         });
 
-        this.fileID = fileID;
-        this.initialSyncID = initialSyncID;
-        this.syncID = initialSyncID;
-
-        this.genToolbar();
-
-        // restore drawing
-        this.drawingFile = new PluginAsset(fileID, initialSyncID, SVG_MIME);
-        this.drawingFile.loadFromSiYuanFS().then(() => {
-            if(this.drawingFile.getContent() != null) {
-                this.editor.loadFromSVG(this.drawingFile.getContent());
-            }
+        this.genToolbar().then(() => {
+            this.editor.dispatch(this.editor.setBackgroundStyle({ autoresize: true }), false);
+            this.editor.getRootElement().style.height = '100%';
         });
 
-        this.editor.dispatch(this.editor.setBackgroundStyle({ autoresize: true }), false);
-        this.editor.getRootElement().style.height = '100%';
+        findSyncIDInProtyle(this.fileID).then(async (syncID) => {
+            this.syncID = syncID;
+            // restore drawing
+            this.drawingFile = new PluginAsset(this.fileID, syncID, SVG_MIME);
+            await this.drawingFile.loadFromSiYuanFS();
+            if(this.drawingFile.getContent() != null) {
+                await this.editor.loadFromSVG(this.drawingFile.getContent());
+            }
+        });
 
     }
 
@@ -127,24 +125,17 @@ export class EditorManager {
             'type': "whiteboard",
             init() {
                 const fileID = this.data.fileID;
-                const initialSyncID = this.data.initialSyncID;
-                if (fileID == null || initialSyncID == null) {
-                    alert("File or Sync ID and path missing - couldn't open file.")
+                if (fileID == null) {
+                    alert("File ID missing - couldn't open file.")
                     return;
                 }
-                const editor = new PluginEditor(fileID, initialSyncID);
+                const editor = new PluginEditor(fileID);
                 this.element.appendChild(editor.getElement());
             }
         });
     }
 
     toTab(p: Plugin) {
-        for(const tab of p.getOpenedTab()["whiteboard"]) {
-            if(tab.data.fileID == this.editor.getFileID()) {
-                alert("File is already open in another editor tab!");
-                return;
-            }
-        }
         openTab({
             app: p.app,
             custom: {
@@ -153,7 +144,6 @@ export class EditorManager {
                 id: "siyuan-jsdraw-pluginwhiteboard",
                 data: {
                     fileID: this.editor.getFileID(),
-                    initialSyncID: this.editor.getInitialSyncID()
                 }
             }
         });
@@ -168,7 +158,7 @@ export class EditorManager {
         dialog.element.querySelector("#DrawingPanel").appendChild(this.editor.getElement());
     }
 
-    open(p: Plugin) {
+    async open(p: Plugin) {
         if(getFrontend() != "mobile") {
             this.toTab(p);
         } else {

@@ -34,7 +34,7 @@ export default class DrawJSPlugin extends Plugin {
                 const fileID = generateRandomString();
                 const syncID = generateTimeString() + '-' + generateRandomString();
                 protyle.insert(getMarkdownBlock(fileID, syncID), true, false);
-                new EditorManager(new PluginEditor(fileID, syncID)).open(this)
+                new EditorManager(new PluginEditor(fileID)).open(this);
             }
         }];
 
@@ -46,7 +46,7 @@ export default class DrawJSPlugin extends Plugin {
                 label: "Edit with js-draw",
                 click: () => {
                     void this.analytics.sendEvent('edit');
-                    new EditorManager(new PluginEditor(ids.fileID, ids.syncID)).open(this)
+                    new EditorManager(new PluginEditor(ids.fileID)).open(this)
                 }
             })
         })

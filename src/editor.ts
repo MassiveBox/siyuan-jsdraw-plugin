@@ -144,7 +144,7 @@ export class EditorManager {
             init() {
                 const fileID = this.data.fileID;
                 if (fileID == null) {
-                    alert("File ID missing - couldn't open file.")
+                    alert(p.i18n.errNoFileID);
                     return;
                 }
                 const editor = new PluginEditor(fileID, p.config.getDefaultEditorOptions());
@@ -157,7 +157,7 @@ export class EditorManager {
         openTab({
             app: p.app,
             custom: {
-                title: 'Drawing',
+                title: p.i18n.drawing,
                 icon: 'iconDraw',
                 id: "siyuan-jsdraw-pluginwhiteboard",
                 data: {

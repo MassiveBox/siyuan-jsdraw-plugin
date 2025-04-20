@@ -43,7 +43,7 @@ export default class DrawJSPlugin extends Plugin {
             if (ids === null) return;
             e.detail.menu.addItem({
                 icon: "iconDraw",
-                label: "Edit with js-draw",
+                label: this.i18n.editDrawing,
                 click: () => {
                     void this.analytics.sendEvent('edit');
                     new EditorManager(ids.fileID, this.config.getDefaultEditorOptions()).open(this);

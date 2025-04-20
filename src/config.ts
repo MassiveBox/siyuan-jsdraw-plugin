@@ -87,6 +87,7 @@ export class PluginConfigViewer {
 
         this.settingUtils = new SettingUtils({
             plugin: this.plugin,
+            name: this.plugin.i18n.settings.name,
             callback: async (data) => {
                 this.config.setConfig({
                     grid: data.grid,
@@ -100,38 +101,32 @@ export class PluginConfigViewer {
 
         this.settingUtils.addItem({
             key: "grid",
-            title: "Enable grid by default",
-            description: "Enable to automatically turn on the grid on new drawings.",
+            title: this.plugin.i18n.settings.grid.title,
+            description: this.plugin.i18n.settings.grid.description,
             value: this.config.options.grid,
             type: 'checkbox'
         });
 
         this.settingUtils.addItem({
             key: "background",
-            title: "Default background Color",
-            description: "Default background color of the drawing area for new drawings in hexadecimal.",
+            title: this.plugin.i18n.settings.background.title,
+            description: this.plugin.i18n.settings.background.description,
             value: this.config.options.background,
             type: 'textarea',
         });
 
         this.settingUtils.addItem({
             key: "dialogOnDesktop",
-            title: "Open editor as dialog on desktop",
-            description: `
-                Dialog mode provides a larger drawing area, but it's not as handy to use as tabs (default).<br />
-                The editor will always open as a dialog on mobile.
-            `,
+            title: this.plugin.i18n.settings.dialogOnDesktop.title,
+            description: this.plugin.i18n.settings.dialogOnDesktop.description,
             value: this.config.options.dialogOnDesktop,
             type: 'checkbox'
         });
 
         this.settingUtils.addItem({
             key: "analytics",
-            title: "Analytics",
-            description: `
-                Enable to send anonymous usage data to the developer.
-                <a href='https://s.massive.box/jsdraw-plugin-privacy'>Privacy</a>
-            `,
+            title: this.plugin.i18n.settings.analytics.title,
+            description: this.plugin.i18n.settings.analytics.description,
             value: this.config.options.analytics,
             type: 'checkbox'
         });

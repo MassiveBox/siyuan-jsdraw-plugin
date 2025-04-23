@@ -2,11 +2,12 @@ import {MaterialIconProvider} from "@js-draw/material-icons";
 import {PluginAsset, PluginFile} from "@/file";
 import {JSON_MIME, STORAGE_PATH, SVG_MIME, TOOLBAR_FILENAME} from "@/const";
 import Editor, {BackgroundComponentBackgroundType, BaseWidget, Color4, EditorEventType} from "js-draw";
-import {Dialog, getFrontend, openTab, Plugin} from "siyuan";
+import {Dialog, getFrontend, openTab, Plugin, showMessage} from "siyuan";
 import {findSyncIDInProtyle, replaceSyncID} from "@/protyle";
 import DrawJSPlugin from "@/index";
 import {DefaultEditorOptions} from "@/config";
 import 'js-draw/styles';
+import {SyncIDNotFoundError, UnchangedProtyleError} from "@/errors";
 
 export class PluginEditor {
 
@@ -23,8 +24,9 @@ export class PluginEditor {
     getEditor(): Editor { return this.editor; }
     getFileID(): string { return this.fileID; }
     getSyncID(): string { return this.syncID; }
+    setSyncID(syncID: string) { this.syncID = syncID; }
 
-    constructor(fileID: string, defaultEditorOptions: DefaultEditorOptions) {
+    private constructor(fileID: string) {
 
         this.fileID = fileID;
 
@@ -34,55 +36,56 @@ export class PluginEditor {
             iconProvider: new MaterialIconProvider(),
         });
 
-        this.genToolbar().then(() => {
-            this.editor.dispatch(this.editor.setBackgroundStyle({ autoresize: true }), false);
-            this.editor.getRootElement().style.height = '100%';
-        });
-
-        findSyncIDInProtyle(this.fileID).then(async (syncID) => {
-
-            if(syncID == null) {
-                alert(
-                    "Couldn't find SyncID in protyle for this file.\n" +
-                    "Make sure the drawing you're trying to edit exists in a note.\n" +
-                    "Close this editor tab now, and try to open the editor again."
-                );
-                return;
-            }
-
-            this.syncID = syncID;
-            // restore drawing
-            this.drawingFile = new PluginAsset(this.fileID, syncID, SVG_MIME);
-            await this.drawingFile.loadFromSiYuanFS();
-
-            if(this.drawingFile.getContent() != null) {
-                await this.editor.loadFromSVG(this.drawingFile.getContent());
-            }else{
-                // it's a new drawing
-                this.editor.dispatch(this.editor.setBackgroundStyle({
-                    color: Color4.fromHex(defaultEditorOptions.background),
-                    type: defaultEditorOptions.grid ? BackgroundComponentBackgroundType.Grid : BackgroundComponentBackgroundType.SolidColor,
-                    autoresize: true
-                }));
-            }
-
-        }).catch((error) => {
-            alert("Error loading drawing: " + error);
-        });
+        this.editor.dispatch(this.editor.setBackgroundStyle({ autoresize: true }), false);
+        this.editor.getRootElement().style.height = '100%';
 
     }
 
-    private async genToolbar() {
+    static async create(fileID: string, defaultEditorOptions: DefaultEditorOptions): Promise<PluginEditor> {
+
+        const instance = new PluginEditor(fileID);
+
+        await instance.genToolbar();
+        let syncID = await findSyncIDInProtyle(fileID);
+
+        if(syncID == null) {
+            throw new SyncIDNotFoundError(fileID);
+        }
+        instance.setSyncID(syncID);
+        await instance.restoreOrInitFile(defaultEditorOptions);
+
+        return instance;
+
+    }
+
+    async restoreOrInitFile(defaultEditorOptions: DefaultEditorOptions) {
+
+        this.drawingFile = new PluginAsset(this.fileID, this.syncID, SVG_MIME);
+        await this.drawingFile.loadFromSiYuanFS();
+
+        if(this.drawingFile.getContent() != null) {
+            await this.editor.loadFromSVG(this.drawingFile.getContent());
+        }else{
+            // it's a new drawing
+            this.editor.dispatch(this.editor.setBackgroundStyle({
+                color: Color4.fromHex(defaultEditorOptions.background),
+                type: defaultEditorOptions.grid ? BackgroundComponentBackgroundType.Grid : BackgroundComponentBackgroundType.SolidColor,
+                autoresize: true
+            }));
+        }
+
+    }
+
+    async genToolbar() {
 
         const toolbar = this.editor.addToolbar();
 
         // restore toolbarFile state
         this.toolbarFile = new PluginFile(STORAGE_PATH, TOOLBAR_FILENAME, JSON_MIME);
-        this.toolbarFile.loadFromSiYuanFS().then(() => {
-            if(this.toolbarFile.getContent() != null) {
-                toolbar.deserializeState(this.toolbarFile.getContent());
-            }
-        });
+        await this.toolbarFile.loadFromSiYuanFS();
+        if(this.toolbarFile.getContent() != null) {
+            toolbar.deserializeState(this.toolbarFile.getContent());
+        }
 
         // save button
         const saveButton = toolbar.addSaveButton(async () => {
@@ -109,7 +112,7 @@ export class PluginEditor {
             newSyncID = this.drawingFile.getSyncID();
             if(newSyncID != oldSyncID) { // supposed to replace protyle
                 const changed = await replaceSyncID(this.fileID, oldSyncID, newSyncID); // try to change protyle
-                if(!changed) throw new Error("Couldn't replace old images in protyle");
+                if(!changed) throw new UnchangedProtyleError();
                 await this.drawingFile.removeOld(oldSyncID);
             }
             saveButton.setDisabled(true);
@@ -117,7 +120,10 @@ export class PluginEditor {
                 saveButton.setDisabled(false);
             }, 500);
         } catch (error) {
-            alert("Error saving! The current drawing has been copied to your clipboard. You may need to create a new drawing and paste it there.");
+            showMessage("Error saving! The current drawing has been copied to your clipboard. You may need to create a new drawing and paste it there.", 0, 'error');
+            if(error instanceof UnchangedProtyleError) {
+                showMessage("Make sure the image you're trying to edit still exists in your documents.", 0, 'error');
+            }
             await navigator.clipboard.writeText(svgElem.outerHTML);
             console.error(error);
             console.log("Couldn't save SVG: ", svgElem.outerHTML)
@@ -133,24 +139,45 @@ export class PluginEditor {
 export class EditorManager {
 
     private editor: PluginEditor
+    setEditor(editor: PluginEditor) { this.editor = editor;}
 
-    constructor(fileID: string, defaultEditorOptions: DefaultEditorOptions) {
-        this.editor = new PluginEditor(fileID, defaultEditorOptions);
+    static async create(fileID: string, p: DrawJSPlugin) {
+        let instance = new EditorManager();
+        try {
+            let editor = await PluginEditor.create(fileID, p.config.getDefaultEditorOptions());
+            instance.setEditor(editor);
+        }catch (error) {
+            EditorManager.handleCreationError(error, p);
+        }
+        return instance;
     }
 
     static registerTab(p: DrawJSPlugin) {
         p.addTab({
             'type': "whiteboard",
-            init() {
+            async init() {
                 const fileID = this.data.fileID;
                 if (fileID == null) {
                     alert(p.i18n.errNoFileID);
                     return;
                 }
-                const editor = new PluginEditor(fileID, p.config.getDefaultEditorOptions());
-                this.element.appendChild(editor.getElement());
+                try {
+                    const editor = await PluginEditor.create(fileID, p.config.getDefaultEditorOptions());
+                    this.element.appendChild(editor.getElement());
+                }catch (error){
+                    EditorManager.handleCreationError(error, p);
+                }
             }
         });
+    }
+
+    static handleCreationError(error: any, p: DrawJSPlugin) {
+        console.error(error);
+        let errorTxt = p.i18n.errCreateUnknown;
+        if(error instanceof SyncIDNotFoundError) {
+            errorTxt = p.i18n.errSyncIDNotFound;
+        }
+        showMessage(errorTxt, 0, 'error');
     }
 
     toTab(p: Plugin) {
@@ -176,7 +203,7 @@ export class EditorManager {
         dialog.element.querySelector("#DrawingPanel").appendChild(this.editor.getElement());
     }
 
-    async open(p: DrawJSPlugin) {
+    open(p: DrawJSPlugin) {
         if(getFrontend() != "mobile" && !p.config.options.dialogOnDesktop) {
             this.toTab(p);
         } else {

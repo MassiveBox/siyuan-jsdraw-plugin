@@ -2,6 +2,9 @@
   "insertDrawing": "Insert Drawing",
   "editDrawing": "Edit with js-draw",
   "errNoFileID": "File ID missing - couldn't open file.",
+  "errSyncIDNotFound": "Couldn't find SyncID in document for drawing, make sure you're trying to edit a drawing that is included in at least a note.",
+  "errCreateUnknown": "Unknown error while creating editor, please try again.",
+  "errInvalidBackgroundColor": "Invalid background color! Please enter an HEX color, like #000000 (black) or #FFFFFF (white). The old background color will be used.",
   "drawing": "Drawing",
   "settings": {
     "name": "js-draw Plugin Settings",

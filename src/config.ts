@@ -1,6 +1,6 @@
 import {PluginFile} from "@/file";
 import {CONFIG_FILENAME, JSON_MIME, STORAGE_PATH} from "@/const";
-import {Plugin} from "siyuan";
+import {Plugin, showMessage} from "siyuan";
 import {SettingUtils} from "@/libs/setting-utils";
 import {validateColor} from "@/helper";
 
@@ -61,10 +61,6 @@ export class PluginConfig {
     }
 
     setConfig(config: Options) {
-        if(!validateColor(config.background)) {
-            alert("Invalid background color! Please enter an HEX color, like #000000 (black) or #FFFFFF (white)");
-            config.background = this.options.background;
-        }
 
         this.options = config;
     }
@@ -83,19 +79,30 @@ export class PluginConfigViewer {
         this.populateSettingMenu();
     }
 
+    async configSaveCallback(data) {
+
+        if(!validateColor(data.background)) {
+            showMessage(this.plugin.i18n.errInvalidBackgroundColor, 0, 'error');
+            data.background = this.config.options.background;
+            this.settingUtils.set('background', data.background);
+        }
+        this.config.setConfig({
+            grid: data.grid,
+            background: data.background,
+            dialogOnDesktop: data.dialogOnDesktop,
+            analytics: data.analytics,
+        });
+        await this.config.save();
+
+    }
+
     populateSettingMenu() {
 
         this.settingUtils = new SettingUtils({
             plugin: this.plugin,
             name: this.plugin.i18n.settings.name,
             callback: async (data) => {
-                this.config.setConfig({
-                    grid: data.grid,
-                    background: data.background,
-                    dialogOnDesktop: data.dialogOnDesktop,
-                    analytics: data.analytics,
-                });
-                await this.config.save();
+                await this.configSaveCallback(data);
             }
         });
 

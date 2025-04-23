@@ -29,12 +29,12 @@ export default class DrawJSPlugin extends Plugin {
             id: "insert-drawing",
             filter: ["Insert Drawing", "Add drawing", "whiteboard", "freehand", "graphics", "jsdraw"],
             html: getMenuHTML("iconDraw", this.i18n.insertDrawing),
-            callback: (protyle: Protyle) => {
+            callback: async (protyle: Protyle) => {
                 void this.analytics.sendEvent('create');
                 const fileID = generateRandomString();
                 const syncID = generateTimeString() + '-' + generateRandomString();
                 protyle.insert(getMarkdownBlock(fileID, syncID), true, false);
-                new EditorManager(fileID, this.config.getDefaultEditorOptions()).open(this);
+                (await EditorManager.create(fileID, this)).open(this);
             }
         }];
 
@@ -44,9 +44,9 @@ export default class DrawJSPlugin extends Plugin {
             e.detail.menu.addItem({
                 icon: "iconDraw",
                 label: this.i18n.editDrawing,
-                click: () => {
+                click: async () => {
                     void this.analytics.sendEvent('edit');
-                    new EditorManager(ids.fileID, this.config.getDefaultEditorOptions()).open(this);
+                    (await EditorManager.create(ids.fileID, this)).open(this);
                 }
             })
         })

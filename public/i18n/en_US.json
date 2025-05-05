@@ -8,13 +8,25 @@
   "drawing": "Drawing",
   "settings": {
     "name": "js-draw Plugin Settings",
+    "suggestedColors":{
+      "white": "White",
+      "black": "Black",
+      "transparent": "Transparent",
+      "custom": "Custom",
+      "darkBlue": "Dark Blue",
+      "darkGray": "Dark Gray"
+    },
     "grid": {
       "title": "Enable grid by default",
       "description": "Enable to automatically turn on the grid on new drawings."
     },
+    "backgroundDropdown":{
+      "title": "Background color",
+      "description": "Default background color for new drawings."
+    },
     "background": {
-      "title": "Default background Color",
-      "description": "Default background color for new drawings, in hexadecimal."
+      "title": "Custom background",
+      "description": "Hexadecimal code of the custom background color for new drawings.<br /><b>This setting is only applied if \"Background Color\" is set to \"Custom\"!</b>"
     },
     "dialogOnDesktop": {
       "title": "Open editor as dialog on desktop",

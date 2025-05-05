@@ -80,17 +80,17 @@ export class PluginEditor {
 
         const toolbar = this.editor.addToolbar();
 
+        // save button
+        const saveButton = toolbar.addSaveButton(async () => {
+            await this.saveCallback(saveButton);
+        });
+
         // restore toolbarFile state
         this.toolbarFile = new PluginFile(STORAGE_PATH, TOOLBAR_FILENAME, JSON_MIME);
         await this.toolbarFile.loadFromSiYuanFS();
         if(this.toolbarFile.getContent() != null) {
             toolbar.deserializeState(this.toolbarFile.getContent());
         }
-
-        // save button
-        const saveButton = toolbar.addSaveButton(async () => {
-            await this.saveCallback(saveButton);
-        });
 
         // save toolbar config on tool change (toolbar state is not saved in SVGs!)
         this.editor.notifier.on(EditorEventType.ToolUpdated, () => {

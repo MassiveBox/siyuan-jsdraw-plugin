@@ -2,7 +2,6 @@ import {PluginFile} from "@/file";
 import {CONFIG_FILENAME, JSON_MIME, STORAGE_PATH} from "@/const";
 import {Plugin, showMessage} from "siyuan";
 import {SettingUtils} from "@/libs/setting-utils";
-import {validateColor} from "@/helper";
 
 type Options = {
     grid: boolean
@@ -48,7 +47,7 @@ export class PluginConfig {
     private loadDefaultConfig() {
         this.options = {
             grid: true,
-            background: "#000000",
+            background: "#00000000",
             dialogOnDesktop: false,
             analytics: true,
         };
@@ -61,8 +60,14 @@ export class PluginConfig {
     }
 
     setConfig(config: Options) {
-
         this.options = config;
+    }
+
+    static validateColor(hex: string) {
+        hex = hex.replace('#', '');
+        return typeof hex === 'string'
+            && (hex.length === 6 || hex.length === 8)
+            && !isNaN(Number('0x' + hex))
     }
 
 }
@@ -72,23 +77,34 @@ export class PluginConfigViewer {
     config: PluginConfig;
     settingUtils: SettingUtils;
     plugin: Plugin;
+    private readonly backgroundDropdownOptions;
 
     constructor(config: PluginConfig, plugin: Plugin) {
         this.config = config;
         this.plugin = plugin;
+        this.backgroundDropdownOptions = {
+            '#00000000': plugin.i18n.settings.suggestedColors.transparent,
+            'CUSTOM': plugin.i18n.settings.suggestedColors.custom,
+            '#ffffff': plugin.i18n.settings.suggestedColors.white,
+            '#1e2227': plugin.i18n.settings.suggestedColors.darkBlue,
+            '#1e1e1e': plugin.i18n.settings.suggestedColors.darkGray,
+            '#000000': plugin.i18n.settings.suggestedColors.black,
+        }
         this.populateSettingMenu();
     }
 
     async configSaveCallback(data) {
 
-        if(!validateColor(data.background)) {
+        let color = data.backgroundDropdown === "CUSTOM" ? data.background : data.backgroundDropdown;
+        if(!PluginConfig.validateColor(color)) {
             showMessage(this.plugin.i18n.errInvalidBackgroundColor, 0, 'error');
             data.background = this.config.options.background;
             this.settingUtils.set('background', data.background);
         }
+
         this.config.setConfig({
             grid: data.grid,
-            background: data.background,
+            background: color,
             dialogOnDesktop: data.dialogOnDesktop,
             analytics: data.analytics,
         });
@@ -100,7 +116,7 @@ export class PluginConfigViewer {
 
         this.settingUtils = new SettingUtils({
             plugin: this.plugin,
-            name: this.plugin.i18n.settings.name,
+            name: 'optionsUI',
             callback: async (data) => {
                 await this.configSaveCallback(data);
             }
@@ -115,11 +131,21 @@ export class PluginConfigViewer {
         });
 
         this.settingUtils.addItem({
+            key: 'backgroundDropdown',
+            title: this.plugin.i18n.settings.backgroundDropdown.title,
+            description: this.plugin.i18n.settings.backgroundDropdown.description,
+            type: 'select',
+            value:  this.config.options.background in this.backgroundDropdownOptions ?
+                this.config.options.background : 'CUSTOM',
+            options: this.backgroundDropdownOptions,
+        });
+
+        this.settingUtils.addItem({
             key: "background",
             title: this.plugin.i18n.settings.background.title,
             description: this.plugin.i18n.settings.background.description,
             value: this.config.options.background,
-            type: 'textarea',
+            type: 'textinput',
         });
 
         this.settingUtils.addItem({

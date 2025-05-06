@@ -4,6 +4,7 @@ import {Plugin, showMessage} from "siyuan";
 import {SettingUtils} from "@/libs/setting-utils";
 
 type Options = {
+    restorePosition: boolean;
     grid: boolean
     background: string
     dialogOnDesktop: boolean
@@ -11,6 +12,7 @@ type Options = {
 };
 
 export type DefaultEditorOptions = {
+    restorePosition: boolean;
     grid: boolean
     background: string
 }
@@ -30,8 +32,9 @@ export class PluginConfig {
 
     getDefaultEditorOptions(): DefaultEditorOptions {
         return {
+            restorePosition: this.options.restorePosition,
             grid: this.options.grid,
-            background: this.options.background,
+            background: this.options.background
         };
     }
 
@@ -50,6 +53,7 @@ export class PluginConfig {
             background: "#00000000",
             dialogOnDesktop: false,
             analytics: true,
+            restorePosition: true,
         };
         this.firstRun = true;
     }
@@ -107,6 +111,7 @@ export class PluginConfigViewer {
             background: color,
             dialogOnDesktop: data.dialogOnDesktop,
             analytics: data.analytics,
+            restorePosition: data.restorePosition,
         });
         await this.config.save();
 
@@ -146,6 +151,14 @@ export class PluginConfigViewer {
             description: this.plugin.i18n.settings.background.description,
             value: this.config.options.background,
             type: 'textinput',
+        });
+
+        this.settingUtils.addItem({
+            key: "restorePosition",
+            title: this.plugin.i18n.settings.restorePosition.title,
+            description: this.plugin.i18n.settings.restorePosition.description,
+            value: this.config.options.restorePosition,
+            type: 'checkbox'
         });
 
         this.settingUtils.addItem({

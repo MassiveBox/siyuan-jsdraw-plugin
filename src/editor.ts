@@ -1,7 +1,15 @@
 import {MaterialIconProvider} from "@js-draw/material-icons";
 import {PluginAsset, PluginFile} from "@/file";
 import {JSON_MIME, STORAGE_PATH, SVG_MIME, TOOLBAR_FILENAME} from "@/const";
-import Editor, {BackgroundComponentBackgroundType, BaseWidget, Color4, EditorEventType} from "js-draw";
+import Editor, {
+    BackgroundComponentBackgroundType,
+    BaseWidget,
+    Color4,
+    EditorEventType,
+    Mat33,
+    Vec2,
+    Viewport
+} from "js-draw";
 import {Dialog, getFrontend, openTab, Plugin, showMessage} from "siyuan";
 import {findSyncIDInProtyle, replaceSyncID} from "@/protyle";
 import DrawJSPlugin from "@/index";
@@ -62,9 +70,26 @@ export class PluginEditor {
 
         this.drawingFile = new PluginAsset(this.fileID, this.syncID, SVG_MIME);
         await this.drawingFile.loadFromSiYuanFS();
+        const drawingContent = this.drawingFile.getContent();
 
-        if(this.drawingFile.getContent() != null) {
-            await this.editor.loadFromSVG(this.drawingFile.getContent());
+        if(drawingContent != null) {
+
+            await this.editor.loadFromSVG(drawingContent);
+
+            // restore position and zoom
+            const svgElem = new DOMParser().parseFromString(drawingContent, SVG_MIME).documentElement;
+            const editorViewStr = svgElem.getAttribute('editorView');
+            if(editorViewStr != null && defaultEditorOptions.restorePosition) {
+                try {
+                    const [viewBoxOriginX, viewBoxOriginY, zoom] = editorViewStr.split(' ').map(x => parseFloat(x));
+                    this.editor.dispatch(Viewport.transformBy(Mat33.scaling2D(zoom)));
+                    this.editor.dispatch(Viewport.transformBy(Mat33.translation(Vec2.of(
+                        - viewBoxOriginX,
+                        - viewBoxOriginY
+                    ))));
+                }catch (e){}
+            }
+
         }else{
             // it's a new drawing
             this.editor.dispatch(this.editor.setBackgroundStyle({
@@ -105,6 +130,10 @@ export class PluginEditor {
         const svgElem = this.editor.toSVG();
         let newSyncID: string;
         const oldSyncID = this.syncID;
+
+        const rect = this.editor.viewport.visibleRect;
+        const zoom = this.editor.viewport.getScaleFactor();
+        svgElem.setAttribute('editorView', `${rect.x} ${rect.y} ${zoom}`)
 
         try {
             this.drawingFile.setContent(svgElem.outerHTML);

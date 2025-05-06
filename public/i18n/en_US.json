@@ -35,6 +35,10 @@
     "analytics": {
       "title": "Analytics",
       "description": "Enable to send anonymous usage data to the developer. <a href='https://s.massive.box/jsdraw-plugin-privacy'>Privacy Policy</a>"
+    },
+    "restorePosition": {
+      "title": "Remember editor position",
+      "description": "When enabled, the editor will remember the zoom factor and position, and it will restore them the next time you open the drawing."
     }
   }
 }

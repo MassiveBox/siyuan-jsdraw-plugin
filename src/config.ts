@@ -2,16 +2,14 @@ import {PluginFile} from "@/file";
 import {CONFIG_FILENAME, JSON_MIME, STORAGE_PATH} from "@/const";
 import {Plugin, showMessage} from "siyuan";
 import {SettingUtils} from "@/libs/setting-utils";
+import {getFirstDefined} from "@/helper";
 
-type Options = {
-    restorePosition: boolean;
-    grid: boolean
-    background: string
+export interface Options {
     dialogOnDesktop: boolean
     analytics: boolean
-};
-
-export type DefaultEditorOptions = {
+    editorOptions: EditorOptions
+}
+export interface EditorOptions {
     restorePosition: boolean;
     grid: boolean
     background: string
@@ -30,32 +28,23 @@ export class PluginConfig {
         this.file = new PluginFile(STORAGE_PATH, CONFIG_FILENAME, JSON_MIME);
     }
 
-    getDefaultEditorOptions(): DefaultEditorOptions {
-        return {
-            restorePosition: this.options.restorePosition,
-            grid: this.options.grid,
-            background: this.options.background
-        };
-    }
-
     async load() {
         this.firstRun = false;
         await this.file.loadFromSiYuanFS();
-        this.options = JSON.parse(this.file.getContent());
-        if(this.options == null) {
-            this.loadDefaultConfig();
+        const jsonObj = JSON.parse(this.file.getContent());
+        if(jsonObj == null) {
+            this.firstRun = true;
         }
-    }
-
-    private loadDefaultConfig() {
+        // if more than one fallback, the intermediate ones are from a legacy config file version
         this.options = {
-            grid: true,
-            background: "#00000000",
-            dialogOnDesktop: false,
-            analytics: true,
-            restorePosition: true,
+            dialogOnDesktop: getFirstDefined(jsonObj?.dialogOnDesktop, false),
+            analytics: getFirstDefined(jsonObj?.analytics, true),
+            editorOptions: {
+                restorePosition: getFirstDefined(jsonObj?.editorOptions?.restorePosition, jsonObj?.restorePosition,  true),
+                grid: getFirstDefined(jsonObj?.editorOptions?.grid, jsonObj?.grid, true),
+                background: getFirstDefined(jsonObj?.editorOptions?.background, jsonObj?.background, "#00000000")
+            },
         };
-        this.firstRun = true;
     }
 
     async save() {
@@ -102,16 +91,18 @@ export class PluginConfigViewer {
         let color = data.backgroundDropdown === "CUSTOM" ? data.background : data.backgroundDropdown;
         if(!PluginConfig.validateColor(color)) {
             showMessage(this.plugin.i18n.errInvalidBackgroundColor, 0, 'error');
-            data.background = this.config.options.background;
+            data.background = this.config.options.editorOptions.background;
             this.settingUtils.set('background', data.background);
         }
 
         this.config.setConfig({
-            grid: data.grid,
-            background: color,
             dialogOnDesktop: data.dialogOnDesktop,
             analytics: data.analytics,
-            restorePosition: data.restorePosition,
+            editorOptions: {
+                grid: data.grid,
+                background: color,
+                restorePosition: data.restorePosition,
+            }
         });
         await this.config.save();
 
@@ -131,7 +122,7 @@ export class PluginConfigViewer {
             key: "grid",
             title: this.plugin.i18n.settings.grid.title,
             description: this.plugin.i18n.settings.grid.description,
-            value: this.config.options.grid,
+            value: this.config.options.editorOptions.grid,
             type: 'checkbox'
         });
 
@@ -140,8 +131,8 @@ export class PluginConfigViewer {
             title: this.plugin.i18n.settings.backgroundDropdown.title,
             description: this.plugin.i18n.settings.backgroundDropdown.description,
             type: 'select',
-            value:  this.config.options.background in this.backgroundDropdownOptions ?
-                this.config.options.background : 'CUSTOM',
+            value:  this.config.options.editorOptions.background in this.backgroundDropdownOptions ?
+                this.config.options.editorOptions.background : 'CUSTOM',
             options: this.backgroundDropdownOptions,
         });
 
@@ -149,7 +140,7 @@ export class PluginConfigViewer {
             key: "background",
             title: this.plugin.i18n.settings.background.title,
             description: this.plugin.i18n.settings.background.description,
-            value: this.config.options.background,
+            value: this.config.options.editorOptions.background,
             type: 'textinput',
         });
 
@@ -157,7 +148,7 @@ export class PluginConfigViewer {
             key: "restorePosition",
             title: this.plugin.i18n.settings.restorePosition.title,
             description: this.plugin.i18n.settings.restorePosition.description,
-            value: this.config.options.restorePosition,
+            value: this.config.options.editorOptions.restorePosition,
             type: 'checkbox'
         });
 

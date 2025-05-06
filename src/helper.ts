@@ -106,3 +106,11 @@ export function imgSrcToIDs(imgSrc: string | null): { fileID: string; syncID: st
     return assetPathToIDs(imgSrc);
 
 }
+
+export function getFirstDefined(...a) {
+    for(let i = 0; i < a.length; i++) {
+        if(a[i] !== undefined) {
+            return a[i];
+        }
+    }
+}

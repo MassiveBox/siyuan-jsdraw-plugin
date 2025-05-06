@@ -13,7 +13,7 @@ import Editor, {
 import {Dialog, getFrontend, openTab, Plugin, showMessage} from "siyuan";
 import {findSyncIDInProtyle, replaceSyncID} from "@/protyle";
 import DrawJSPlugin from "@/index";
-import {DefaultEditorOptions} from "@/config";
+import {EditorOptions} from "@/config";
 import 'js-draw/styles';
 import {SyncIDNotFoundError, UnchangedProtyleError} from "@/errors";
 
@@ -49,7 +49,7 @@ export class PluginEditor {
 
     }
 
-    static async create(fileID: string, defaultEditorOptions: DefaultEditorOptions): Promise<PluginEditor> {
+    static async create(fileID: string, defaultEditorOptions: EditorOptions): Promise<PluginEditor> {
 
         const instance = new PluginEditor(fileID);
 
@@ -66,7 +66,7 @@ export class PluginEditor {
 
     }
 
-    async restoreOrInitFile(defaultEditorOptions: DefaultEditorOptions) {
+    async restoreOrInitFile(defaultEditorOptions: EditorOptions) {
 
         this.drawingFile = new PluginAsset(this.fileID, this.syncID, SVG_MIME);
         await this.drawingFile.loadFromSiYuanFS();
@@ -173,7 +173,7 @@ export class EditorManager {
     static async create(fileID: string, p: DrawJSPlugin) {
         let instance = new EditorManager();
         try {
-            let editor = await PluginEditor.create(fileID, p.config.getDefaultEditorOptions());
+            let editor = await PluginEditor.create(fileID, p.config.options.editorOptions);
             instance.setEditor(editor);
         }catch (error) {
             EditorManager.handleCreationError(error, p);
@@ -191,7 +191,7 @@ export class EditorManager {
                     return;
                 }
                 try {
-                    const editor = await PluginEditor.create(fileID, p.config.getDefaultEditorOptions());
+                    const editor = await PluginEditor.create(fileID, p.config.options.editorOptions);
                     this.element.appendChild(editor.getElement());
                 }catch (error){
                     EditorManager.handleCreationError(error, p);

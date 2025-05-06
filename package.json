@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@js-draw/material-icons": "^1.29.0",
-    "js-draw": "^1.29.0"
+    "js-draw": "^1.29.0",
+    "ts-serializable": "^4.2.0"
   }
 }

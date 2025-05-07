@@ -44,6 +44,14 @@ export class PluginEditor {
             iconProvider: new MaterialIconProvider(),
         });
 
+        const styleElement = document.createElement('style');
+        styleElement.innerHTML = `
+            canvas.wetInkCanvas {
+                cursor: url('/plugins/siyuan-jsdraw-plugin/webapp/cursor.png') 6 6, auto;
+            }
+        `;
+        this.element.appendChild(styleElement);
+
         this.editor.dispatch(this.editor.setBackgroundStyle({ autoresize: true }), false);
         this.editor.getRootElement().style.height = '100%';
 

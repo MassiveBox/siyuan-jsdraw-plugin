@@ -1,7 +1,9 @@
-name: Create Release on Tag Push
+name: Build on Push and create Release on Tag
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
 
@@ -20,13 +22,19 @@ jobs:
           node-version: 20
           registry-url: "https://registry.npmjs.org"
 
-        # Install pnpm
+      # Install pnpm
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
           version: 8
           run_install: false
+
+      # Validate Tag Matches JSON Versions
+      - name: Validate Tag Matches JSON Versions
+        if: github.ref_type == 'tag'
+        run: |
+          node scripts/validate_tag.cjs ${{ github.ref }}
 
       # Get pnpm store directory
       - name: Get pnpm store directory
@@ -52,11 +60,22 @@ jobs:
       - name: Build for production
         run: pnpm build
 
-      - name: Release
-        uses: ncipollo/release-action@v1
+      # Move file
+      - name: Move file
+        run: mkdir built; mv package.zip built/package.zip
+
+      # Upload artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
         with:
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          artifacts: "package.zip"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          prerelease: false
+          path: built/package.zip
+          overwrite: true
+
+      # Create Forgejo Release
+      - name: Create Forgejo Release
+        if: github.ref_type == 'tag'
+        uses: actions/forgejo-release@v1
+        with:
+          direction: upload
+          release-dir: built
+          token: ${{ secrets.FORGE_TOKEN }}

@@ -47,7 +47,7 @@ export class PluginEditor {
         const styleElement = document.createElement('style');
         styleElement.innerHTML = `
             canvas.wetInkCanvas {
-                cursor: url('/plugins/siyuan-jsdraw-plugin/webapp/cursor.png') 6 6, auto;
+                cursor: url('/plugins/siyuan-jsdraw-plugin/webapp/cursor.png') 3 3, none;
             }
         `;
         this.element.appendChild(styleElement);

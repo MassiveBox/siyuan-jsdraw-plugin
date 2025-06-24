@@ -1,4 +1,4 @@
-import {Plugin, Protyle} from 'siyuan';
+import {Plugin, Protyle, showMessage} from 'siyuan';
 import {
     getMarkdownBlock,
     loadIcons,
@@ -51,6 +51,23 @@ export default class DrawJSPlugin extends Plugin {
             })
         })
 
+        this.addCommand({
+            langKey: "editShortcut",
+            hotkey: "⌥⇧D",
+            callback: async () => {
+                await this.editSelectedImg();
+            },
+        })
+
+        this.addTopBar({
+            icon: "iconDraw",
+            title: this.i18n.insertDrawing,
+            callback: async () => {
+                await this.editSelectedImg();
+            },
+            position: "left"
+        })
+
     }
 
     onunload() {
@@ -59,6 +76,23 @@ export default class DrawJSPlugin extends Plugin {
 
     uninstall() {
         void this.analytics.sendEvent("uninstall");
+    }
+
+    private async editSelectedImg() {
+
+        let selectedImg = document.getElementsByClassName('img--select');
+        if(selectedImg.length == 0) {
+            showMessage(this.i18n.msgMustSelect, 5000, 'info');
+            return;
+        }
+
+        let ids = imgSrcToIDs(findImgSrc(selectedImg[0] as HTMLElement));
+        if(ids == null) {
+            return;
+        }
+        void this.analytics.sendEvent('edit');
+        (await EditorManager.create(ids.fileID, this)).open(this);
+
     }
 
     private async startConfig() {

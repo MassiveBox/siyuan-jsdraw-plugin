@@ -221,7 +221,7 @@ export class EditorManager {
         openTab({
             app: p.app,
             custom: {
-                title: p.i18n.drawing,
+                title: p.i18n.whiteboard,
                 icon: 'iconDraw',
                 id: "siyuan-jsdraw-pluginwhiteboard",
                 data: {

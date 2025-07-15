@@ -5,11 +5,12 @@ This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan docu
 
 ## Usage instructions
 - Install the plugin from the marketplace. You can find it by searching for `js-draw`. 
-- To add a new drawing to your document:
-  1. Type `/Insert Drawing` in your document, and select the correct menu entry
+- To add a new whiteboard to your document:
+  1. Type `/Insert whiteboard` in your document, and select the correct menu entry
   2. The whiteboard editor will open in a new tab. Draw as you like, then click the Save button and close the tab.
-- To edit the image later:
-  1. Right-click on the image (or click the three dots on mobile), select "Plugin" > "Edit with js-draw" in the menu
+- To edit the whiteboard later:
+  1. Left-click or tap on the whiteboard to select it, then click on the Edit icon in the top bar
+     - Or right-click on the whiteboard (or click the three dots on mobile), select "Plugin" > "Edit whiteboard" in the menu
   2. The editor tab will open, edit your file as you like, then click the Save button and close the tab.
 
 ## Planned features

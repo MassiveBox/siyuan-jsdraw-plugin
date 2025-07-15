@@ -26,9 +26,9 @@ export default class DrawJSPlugin extends Plugin {
         await this.startAnalytics();
 
         this.protyleSlash = [{
-            id: "insert-drawing",
-            filter: ["Insert Drawing", "Add drawing", "whiteboard", "freehand", "graphics", "jsdraw"],
-            html: getMenuHTML("iconDraw", this.i18n.insertDrawing),
+            id: "insert-whiteboard",
+            filter: ["Insert Drawing", "Add drawing", "Insert whiteboard", "Add whiteboard", "whiteboard", "freehand", "graphics", "jsdraw"],
+            html: getMenuHTML("iconDraw", this.i18n.insertWhiteboard),
             callback: async (protyle: Protyle) => {
                 void this.analytics.sendEvent('create');
                 const fileID = generateRandomString();
@@ -43,7 +43,7 @@ export default class DrawJSPlugin extends Plugin {
             if (ids === null) return;
             e.detail.menu.addItem({
                 icon: "iconDraw",
-                label: this.i18n.editDrawing,
+                label: this.i18n.editWhiteboard,
                 click: async () => {
                     void this.analytics.sendEvent('edit');
                     (await EditorManager.create(ids.fileID, this)).open(this);
@@ -61,7 +61,7 @@ export default class DrawJSPlugin extends Plugin {
 
         this.addTopBar({
             icon: "iconDraw",
-            title: this.i18n.insertDrawing,
+            title: this.i18n.editShortcut,
             callback: async () => {
                 await this.editSelectedImg();
             },
@@ -82,12 +82,13 @@ export default class DrawJSPlugin extends Plugin {
 
         let selectedImg = document.getElementsByClassName('img--select');
         if(selectedImg.length == 0) {
-            showMessage(this.i18n.msgMustSelect, 5000, 'info');
+            showMessage(this.i18n.msgMustSelect + this.i18n.usageInstructionsLink, 5000, 'info');
             return;
         }
 
         let ids = imgSrcToIDs(findImgSrc(selectedImg[0] as HTMLElement));
         if(ids == null) {
+            showMessage(this.i18n.errNotAWhiteboard + + this.i18n.usageInstructionsLink, 5000, 'error');
             return;
         }
         void this.analytics.sendEvent('edit');

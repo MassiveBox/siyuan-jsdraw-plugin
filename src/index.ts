@@ -1,4 +1,4 @@
-import {Plugin, Protyle, showMessage} from 'siyuan';
+import {Plugin, Protyle} from 'siyuan';
 import {
     getMarkdownBlock,
     loadIcons,
@@ -10,6 +10,7 @@ import {migrate} from "@/migration";
 import {EditorManager} from "@/editor";
 import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
+import {ErrorReporter, MustSelectError, NotAWhiteboardError} from "@/errors";
 
 export default class DrawJSPlugin extends Plugin {
 
@@ -18,6 +19,7 @@ export default class DrawJSPlugin extends Plugin {
 
     async onload() {
 
+        new ErrorReporter(this.i18n);
         loadIcons(this);
         EditorManager.registerTab(this);
         migrate()
@@ -55,7 +57,7 @@ export default class DrawJSPlugin extends Plugin {
             langKey: "editShortcut",
             hotkey: "⌥⇧D",
             callback: async () => {
-                await this.editSelectedImg();
+                this.editSelectedImg().catch(e => ErrorReporter.error(e, 5000));
             },
         })
 
@@ -63,7 +65,7 @@ export default class DrawJSPlugin extends Plugin {
             icon: "iconDraw",
             title: this.i18n.editShortcut,
             callback: async () => {
-                await this.editSelectedImg();
+                await this.editSelectedImg().catch(e => ErrorReporter.error(e, 5000));
             },
             position: "left"
         })
@@ -82,14 +84,12 @@ export default class DrawJSPlugin extends Plugin {
 
         let selectedImg = document.getElementsByClassName('img--select');
         if(selectedImg.length == 0) {
-            showMessage(this.i18n.msgMustSelect + this.i18n.usageInstructionsLink, 5000, 'info');
-            return;
+            throw new MustSelectError();
         }
 
         let ids = imgSrcToIDs(findImgSrc(selectedImg[0] as HTMLElement));
         if(ids == null) {
-            showMessage(this.i18n.errNotAWhiteboard + + this.i18n.usageInstructionsLink, 5000, 'error');
-            return;
+            throw new NotAWhiteboardError();
         }
         void this.analytics.sendEvent('edit');
         (await EditorManager.create(ids.fileID, this)).open(this);

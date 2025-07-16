@@ -1,5 +1,6 @@
 import {getBlockByID, sql, updateBlock} from "@/api";
 import {assetPathToIDs, IDsToAssetPath} from "@/helper";
+import {MultipleSyncIDsError} from "@/errors";
 
 export async function findSyncIDInProtyle(fileID: string, iter?: number): Promise<string> {
 
@@ -15,11 +16,7 @@ export async function findSyncIDInProtyle(fileID: string, iter?: number): Promis
             if(syncID == null) {
                 syncID = ids.syncID;
             }else if(ids.syncID !== syncID) {
-                throw new Error(
-                    "Multiple syncIDs found in documents. Remove the drawings that don't exist from your documents.\n" +
-                    "Sync conflict copies can cause this error, so make sure to delete them, or at least the js-draw drawings they contain.\n" +
-                    "File IDs must be unique. Close this editor tab now."
-                );
+                throw new MultipleSyncIDsError();
             }
         }
     }
@@ -82,7 +79,7 @@ export async function replaceBlockContent(
 }
 
 function extractImageSourcesFromMarkdown(markdown: string, mustStartWith?: string) {
-    const imageRegex = /!\[.*?\]\((.*?)\)/g; // only get images
+    const imageRegex = /!\[.*?\]\(([^)\s]+)(?:\s+"[^"]+")?\)/g; // only get images
     return Array.from(markdown.matchAll(imageRegex))
         .map(match => match[1])
         .filter(source => source.startsWith(mustStartWith)) // discard other images

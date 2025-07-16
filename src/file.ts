@@ -52,7 +52,7 @@ abstract class PluginFileBase {
     protected toFile(customFilename?: string): File {
         let filename = customFilename || this.fileName;
         const blob = new Blob([this.content], { type: this.mimeType });
-        return new File([blob], filename, { type: this.mimeType });
+        return new File([blob], filename, { type: this.mimeType, lastModified: Date.now() });
     }
 
 }

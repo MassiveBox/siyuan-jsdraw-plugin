@@ -10,12 +10,16 @@ import Editor, {
     Vec2,
     Viewport
 } from "js-draw";
-import {Dialog, getFrontend, openTab, Plugin, showMessage} from "siyuan";
+import {Dialog, getFrontend, openTab, Plugin} from "siyuan";
 import {findSyncIDInProtyle, replaceSyncID} from "@/protyle";
 import DrawJSPlugin from "@/index";
 import {EditorOptions} from "@/config";
 import 'js-draw/styles';
-import {SyncIDNotFoundError, UnchangedProtyleError} from "@/errors";
+import {
+    ErrorReporter,
+    GenericSaveError, InternationalizedError, NoFileIDError, SyncIDNotFoundError,
+    UnchangedProtyleError
+} from "@/errors";
 
 export class PluginEditor {
 
@@ -65,7 +69,7 @@ export class PluginEditor {
         let syncID = await findSyncIDInProtyle(fileID);
 
         if(syncID == null) {
-            throw new SyncIDNotFoundError(fileID);
+            throw new SyncIDNotFoundError();
         }
         instance.setSyncID(syncID);
         await instance.restoreOrInitFile(defaultEditorOptions);
@@ -157,12 +161,13 @@ export class PluginEditor {
                 saveButton.setDisabled(false);
             }, 500);
         } catch (error) {
-            showMessage("Error saving! The current drawing has been copied to your clipboard. You may need to create a new drawing and paste it there.", 0, 'error');
-            if(error instanceof UnchangedProtyleError) {
-                showMessage("Make sure the image you're trying to edit still exists in your documents.", 0, 'error');
+            if(error instanceof InternationalizedError) {
+                ErrorReporter.error(error);
+            }else{
+                ErrorReporter.error(new GenericSaveError());
+                console.error(error);
             }
             await navigator.clipboard.writeText(svgElem.outerHTML);
-            console.error(error);
             console.log("Couldn't save SVG: ", svgElem.outerHTML)
             return;
         }
@@ -184,7 +189,7 @@ export class EditorManager {
             let editor = await PluginEditor.create(fileID, p.config.options.editorOptions);
             instance.setEditor(editor);
         }catch (error) {
-            EditorManager.handleCreationError(error, p);
+            ErrorReporter.error(error);
         }
         return instance;
     }
@@ -195,26 +200,17 @@ export class EditorManager {
             async init() {
                 const fileID = this.data.fileID;
                 if (fileID == null) {
-                    alert(p.i18n.errNoFileID);
+                    ErrorReporter.error(new NoFileIDError());
                     return;
                 }
                 try {
                     const editor = await PluginEditor.create(fileID, p.config.options.editorOptions);
                     this.element.appendChild(editor.getElement());
                 }catch (error){
-                    EditorManager.handleCreationError(error, p);
+                    ErrorReporter.error(error);
                 }
             }
         });
-    }
-
-    static handleCreationError(error: any, p: DrawJSPlugin) {
-        console.error(error);
-        let errorTxt = p.i18n.errCreateUnknown;
-        if(error instanceof SyncIDNotFoundError) {
-            errorTxt = p.i18n.errSyncIDNotFound;
-        }
-        showMessage(errorTxt, 0, 'error');
     }
 
     toTab(p: Plugin) {

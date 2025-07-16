@@ -1,8 +1,9 @@
 import {PluginFile} from "@/file";
 import {CONFIG_FILENAME, JSON_MIME, STORAGE_PATH} from "@/const";
-import {Plugin, showMessage} from "siyuan";
+import {Plugin} from "siyuan";
 import {SettingUtils} from "@/libs/setting-utils";
 import {getFirstDefined} from "@/helper";
+import {ErrorReporter, InvalidBackgroundColorError} from "@/errors";
 
 export interface Options {
     dialogOnDesktop: boolean
@@ -90,7 +91,7 @@ export class PluginConfigViewer {
 
         let color = data.backgroundDropdown === "CUSTOM" ? data.background : data.backgroundDropdown;
         if(!PluginConfig.validateColor(color)) {
-            showMessage(this.plugin.i18n.errInvalidBackgroundColor, 0, 'error');
+            ErrorReporter.error(new InvalidBackgroundColorError());
             data.background = this.config.options.editorOptions.background;
             this.settingUtils.set('background', data.background);
         }

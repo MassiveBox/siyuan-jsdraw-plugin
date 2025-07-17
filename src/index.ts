@@ -6,7 +6,6 @@ import {
     findImgSrc,
     imgSrcToIDs, generateTimeString, generateRandomString
 } from "@/helper";
-import {migrate} from "@/migration";
 import {EditorManager} from "@/editor";
 import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
@@ -22,7 +21,6 @@ export default class DrawJSPlugin extends Plugin {
         new ErrorReporter(this.i18n);
         loadIcons(this);
         EditorManager.registerTab(this);
-        migrate()
 
         await this.startConfig();
         await this.startAnalytics();

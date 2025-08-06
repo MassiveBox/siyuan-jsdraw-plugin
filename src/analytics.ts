@@ -24,6 +24,7 @@ export class Analytics {
                 'frontend': getFrontend(),
                 'backend': getBackend(),
                 'language': navigator.language,
+                'appLanguage': window.siyuan.config.lang,
             } : {};
 
         await fetch(Analytics.ENDPOINT, {

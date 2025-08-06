@@ -5,7 +5,7 @@ import Editor, {
     BackgroundComponentBackgroundType,
     BaseWidget,
     Color4,
-    EditorEventType,
+    EditorEventType, getLocalizationTable,
     Mat33,
     Vec2,
     Viewport
@@ -45,6 +45,7 @@ export class PluginEditor {
         this.element = document.createElement("div");
         this.element.style.height = '100%';
         this.editor = new Editor(this.element, {
+            localization: getLocalizationTable([window.siyuan.config.lang]),
             iconProvider: new MaterialIconProvider(),
         });
 

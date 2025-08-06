@@ -21,7 +21,7 @@ export class ErrorReporter {
         console.error(err);
         let errorTxt = err.message;
         if(err instanceof InternationalizedError) {
-            errorTxt = ErrorReporter.i18n[err.key];
+            errorTxt = ErrorReporter.i18n.errors[err.key];
         }
         if(!timeout) {
             timeout = 0;
@@ -33,48 +33,48 @@ export class ErrorReporter {
 
 export class SyncIDNotFoundError extends InternationalizedError {
     constructor() {
-        super('errSyncIDNotFound');
+        super('syncIDNotFound');
     }
 }
 
 export class UnchangedProtyleError extends InternationalizedError {
     constructor() {
-        super('errUnchangedProtyle');
+        super('unchangedProtyle');
     }
 }
 
 export class MultipleSyncIDsError extends InternationalizedError {
     constructor() {
-        super('errMultipleSyncIDs');
+        super('multipleSyncIDs');
     }
 }
 
 export class GenericSaveError extends InternationalizedError {
     constructor() {
-        super('errSaveGeneric');
+        super('saveGeneric');
     }
 }
 
 export class NotAWhiteboardError extends InternationalizedError {
     constructor() {
-        super('errNotAWhiteboard');
+        super('notAWhiteboard');
     }
 }
 
 export class InvalidBackgroundColorError extends InternationalizedError {
     constructor() {
-        super('errInvalidBackgroundColor');
+        super('invalidBackgroundColor');
     }
 }
 
 export class NoFileIDError extends InternationalizedError {
     constructor() {
-        super('errNoFileID');
+        super('noFileID');
     }
 }
 
 export class MustSelectError extends InternationalizedError {
     constructor() {
-        super('errMustSelect');
+        super('mustSelect');
     }
 }

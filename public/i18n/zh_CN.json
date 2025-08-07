@@ -1,0 +1,52 @@
+{
+  "insertWhiteboard": "插入白板",
+  "editWhiteboard": "编辑白板",
+  "editShortcut": "编辑选中的白板",
+  "errors": {
+    "noFileID": "缺少文件 ID，无法打开文件。",
+    "notAWhiteboard": "您必须选择白板，而不是普通图片。<a href='https://s.massive.box/jsdraw-plugin-instructions'>使用说明</a>",
+    "syncIDNotFound": "在文档中找不到该绘图的 SyncID，请确保您尝试编辑的白板已包含在至少一个笔记中。",
+    "createUnknown": "创建编辑器时出现未知错误，请重试。",
+    "invalidBackgroundColor": "无效的背景颜色！请输入十六进制颜色，例如 #000000（黑色）或 #FFFFFF（白色）。将使用原来的背景颜色。",
+    "multipleSyncIDs": "在文档中发现多个 syncID。请从文档中删除不存在的绘图。\n同步冲突副本可能导致此错误，因此请务必删除它们。\n文件 ID（可在重命名菜单中更改的部分）在所有文档中必须唯一。\n<a href='https://git.massive.box/massivebox/siyuan-jsdraw-plugin/wiki/Errors-and-Fixes#multiple-syncids-found'>完整说明</a>",
+    "unchangedProtyle": "请确保您尝试编辑的图片仍存在于文档中。",
+    "saveGeneric": "保存出错！当前绘图已复制到剪贴板。您可能需要新建一个绘图并粘贴进去。",
+    "mustSelect": "先在文档中左键点击选中白板，然后使用此图标/快捷键直接打开编辑器。<a href='https://s.massive.box/jsdraw-plugin-instructions'>使用说明</a>"
+  },
+  "whiteboard": "白板",
+  "settings": {
+    "name": "js-draw 插件设置",
+    "suggestedColors": {
+      "white": "白色",
+      "black": "黑色",
+      "transparent": "透明",
+      "custom": "自定义",
+      "darkBlue": "深蓝",
+      "darkGray": "深灰"
+    },
+    "grid": {
+      "title": "默认启用网格",
+      "description": "开启后，新白板将自动显示网格。"
+    },
+    "backgroundDropdown": {
+      "title": "背景颜色",
+      "description": "新白板的默认背景颜色。"
+    },
+    "background": {
+      "title": "自定义背景",
+      "description": "新白板自定义背景色的十六进制代码。<br /><b>仅在“背景颜色”设为“自定义”时才生效！</b>"
+    },
+    "dialogOnDesktop": {
+      "title": "在桌面端以对话框打开编辑器",
+      "description": "对话框模式提供更大的绘图区域，但不如标签页（默认）方便。<br />移动端始终会以对话框打开编辑器。"
+    },
+    "analytics": {
+      "title": "分析统计",
+      "description": "开启后，向开发者发送匿名使用数据。<a href='https://s.massive.box/jsdraw-plugin-privacy'>隐私政策</a>"
+    },
+    "restorePosition": {
+      "title": "记住编辑器位置",
+      "description": "开启后，编辑器会记住缩放比例和位置，下次打开同一白板时恢复。"
+    }
+  }
+}

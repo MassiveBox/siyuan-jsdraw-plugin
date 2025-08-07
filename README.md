@@ -4,12 +4,13 @@
 This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan documents.
 
 ## Usage instructions
+![Demo](asset/demo.webp)
 - Install the plugin from the marketplace. You can find it by searching for `js-draw`. 
 - To add a new whiteboard to your document:
   1. Type `/Insert whiteboard` in your document, and select the correct menu entry
   2. The whiteboard editor will open in a new tab. Draw as you like, then click the Save button and close the tab.
 - To edit the whiteboard later:
-  1. Left-click or tap on the whiteboard to select it, then click on the Edit icon in the top bar
+  1. Left-click or tap on the whiteboard to select it, then click on the Edit icon in the top bar or use the keyboard shortcut `Alt+Shift+D`
      - Or right-click on the whiteboard (or click the three dots on mobile), select "Plugin" > "Edit whiteboard" in the menu
   2. The editor tab will open, edit your file as you like, then click the Save button and close the tab.
 
@@ -17,9 +18,9 @@ This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan docu
 Check out the [Projects](https://git.massive.box/massivebox/siyuan-jsdraw-plugin/projects) tab!
 
 ## Contributing
-Contributions are always welcome! Right now, I'm working on the core functionality and fixing bugs.  
-After that is done, I will need help with the internationalization, as, unfortunately, I don't speak Chinese.  
-Please [contact me](mailto:box@massive.box) if you'd like to help!
+Contributions are always welcome!  
+The Chinese translation is made by Kimi AI, and I'm unable to verify it because I don't speak Chinese. If you do and find issues, please let me know.  
+Please [open an issue](https://git.massive.box/massivebox/siyuan-jsdraw-plugin/issues) or [contact me](mailto:box@massive.box) if you'd like to help!
 
 ## Thanks to
 This project couldn't have been possible without (in no particular order):

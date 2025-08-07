@@ -21,13 +21,16 @@
     "desktop-window"
   ],
   "displayName": {
-    "en_US": "JS-Draw Whiteboard"
+    "en_US": "JS-Draw Whiteboard",
+    "zh_CN": "JS-Draw 白板"
   },
   "description": {
-    "en_US": "Include a whiteboard for freehand drawing anywhere in your documents."
+    "en_US": "Include a whiteboard for freehand drawing anywhere in your documents.",
+    "zh_CN": "在您的文档中添加一个自由绘图白板。"
   },
   "readme": {
-    "en_US": "README.md"
+    "en_US": "README.md",
+    "zh_CN": "README-zh_CN.md"
   },
   "funding": {
     "custom": [

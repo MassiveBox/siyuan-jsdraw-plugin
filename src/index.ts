@@ -27,7 +27,7 @@ export default class DrawJSPlugin extends Plugin {
 
         this.protyleSlash = [{
             id: "insert-whiteboard",
-            filter: ["Insert Drawing", "Add drawing", "Insert whiteboard", "Add whiteboard", "whiteboard", "freehand", "graphics", "jsdraw"],
+            filter: ["Insert Drawing", "Add drawing", "Insert whiteboard", "Add whiteboard", "whiteboard", "freehand", "graphics", "jsdraw", this.i18n.insertWhiteboard],
             html: getMenuHTML("iconDraw", this.i18n.insertWhiteboard),
             callback: async (protyle: Protyle) => {
                 void this.analytics.sendEvent('create');

@@ -1,6 +1,6 @@
 {
   "name": "siyuan-jsdraw-plugin",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "type": "module",
   "description": "Include a whiteboard for freehand drawing anywhere in your documents.",
   "repository": "https://git.massive.box/massivebox/siyuan-jsdraw-plugin",

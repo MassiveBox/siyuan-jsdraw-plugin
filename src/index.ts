@@ -33,7 +33,7 @@ export default class DrawJSPlugin extends Plugin {
                 void this.analytics.sendEvent('create');
                 const fileID = generateRandomString();
                 const syncID = generateTimeString() + '-' + generateRandomString();
-                protyle.insert(getMarkdownBlock(fileID, syncID), true, false);
+                protyle.insert(getMarkdownBlock(fileID, syncID), false, false);
                 (await EditorManager.create(fileID, this)).open(this);
             }
         }];

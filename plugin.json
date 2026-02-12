@@ -1,7 +1,7 @@
 {
   "name": "siyuan-jsdraw-plugin",
   "author": "massivebox",
-  "url": "https://git.massive.box/massivebox/siyuan-jsdraw-plugin",
+  "url": "https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin",
   "version": "0.5.2",
   "minAppVersion": "3.0.12",
   "backends": [
@@ -34,7 +34,7 @@
   },
   "funding": {
     "custom": [
-      "https://s.massive.box/jsdraw-plugin-donate"
+      "https://s.boxo.cc/jsdraw-plugin-donate"
     ]
   },
   "keywords": [

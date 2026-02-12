@@ -3,8 +3,8 @@
   "version": "0.5.2",
   "type": "module",
   "description": "Include a whiteboard for freehand drawing anywhere in your documents.",
-  "repository": "https://git.massive.box/massivebox/siyuan-jsdraw-plugin",
-  "homepage": "https://git.massive.box/massivebox/siyuan-jsdraw-plugin",
+  "repository": "https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin",
+  "homepage": "https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin",
   "author": "massivebox",
   "license": "MIT",
   "scripts": {

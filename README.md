@@ -15,12 +15,12 @@ This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan docu
   2. The editor tab will open, edit your file as you like, then click the Save button and close the tab.
 
 ## Planned features
-Check out the [Projects](https://git.massive.box/massivebox/siyuan-jsdraw-plugin/projects) tab!
+Check out the [Projects](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/projects) tab!
 
 ## Contributing
 Contributions are always welcome!  
 The Chinese translation is made by Kimi AI, and I'm unable to verify it because I don't speak Chinese. If you do and find issues, please let me know.  
-Please [open an issue](https://git.massive.box/massivebox/siyuan-jsdraw-plugin/issues) or [contact me](mailto:box@massive.box) if you'd like to help!
+Please [open an issue](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/issues) or [contact me](mailto:box@boxo.cc) if you'd like to help!
 
 ## Thanks to
 This project couldn't have been possible without (in no particular order):

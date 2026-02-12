@@ -15,12 +15,12 @@
     2. 编辑器标签页打开后，按需修改，完成后点击“保存”并关闭标签页。
 
 ## 计划功能
-查看 [Projects](https://git.massive.box/massivebox/siyuan-jsdraw-plugin/projects) 标签页了解详情！
+查看 [Projects](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/projects) 标签页了解详情！
 
 ## 贡献
 欢迎任何形式的贡献！  
 中文翻译由 Kimi AI 完成，因我不懂中文，如有疏漏欢迎指出。  
-若您愿意协助，请 [提交 Issue](https://git.massive.box/massivebox/siyuan-jsdraw-plugin/issues) 或 [联系我](mailto:box@massive.box)。
+若您愿意协助，请 [提交 Issue](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/issues) 或 [联系我](mailto:box@boxo.cc)。
 
 ## 致谢
 本项目离不开以下项目与社区的帮助（排名不分先后）：

@@ -37,7 +37,10 @@ export function refreshImagesForFile(filename: string): number {
         fetch(imageURL, { cache: 'reload' })
             .then(() => {
                 // Reset src to trigger reload with fresh cached content
-                img.src = imageURL;
+                // Use relative path (assets/filename.svg) instead of full URL
+                const url = new URL(imageURL);
+                const relativePath = url.pathname.split('/assets/').pop() || '';
+                img.src = relativePath ? `assets/${relativePath}` : imageURL;
             })
             .catch((e) => {
                 console.warn(`Failed to refresh image: ${e}`);

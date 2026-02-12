@@ -33,6 +33,8 @@ export class PluginEditor {
     private isDirty: boolean = false;
     private saveButton: BaseWidget | null = null;
 
+    private static readonly viewParam: string = 'editorview';
+
     getElement(): HTMLElement { return this.element; }
     getEditor(): Editor { return this.editor; }
     getFilename(): string { return this.filename; }
@@ -95,7 +97,7 @@ export class PluginEditor {
 
             // restore position and zoom
             const svgElem = new DOMParser().parseFromString(drawingContent, SVG_MIME).documentElement;
-            const editorViewStr = svgElem.getAttribute('editorView');
+            const editorViewStr = svgElem.getAttribute(PluginEditor.viewParam);
             if(editorViewStr != null && defaultEditorOptions.restorePosition) {
                 try {
                     const [viewBoxOriginX, viewBoxOriginY, zoom] = editorViewStr.split(' ').map(x => parseFloat(x));
@@ -160,7 +162,13 @@ export class PluginEditor {
 
         const rect = this.editor.viewport.visibleRect;
         const zoom = this.editor.viewport.getScaleFactor();
-        svgElem.setAttribute('editorView', `${rect.x} ${rect.y} ${zoom}`)
+
+        Array.from(svgElem.attributes).forEach(attr => {
+            if (attr.name.toLowerCase() === PluginEditor.viewParam) {
+                svgElem.removeAttribute(attr.name); // fix duplicate param
+            }
+        });
+        svgElem.setAttribute(PluginEditor.viewParam, `${rect.x} ${rect.y} ${zoom}`)
 
         try {
             this.drawingFile.setContent(svgElem.outerHTML);
@@ -168,8 +176,7 @@ export class PluginEditor {
 
             // Force refresh all images referencing this file
             try {
-                const count = refreshImagesForFile(this.filename);
-                console.log(`Refreshing ${count} image(s) for ${this.filename}`);
+                refreshImagesForFile(this.filename);
             } catch (refreshError) {
                 console.warn('Image refresh failed, but save succeeded:', refreshError);
             }

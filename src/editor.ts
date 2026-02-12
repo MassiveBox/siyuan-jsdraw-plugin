@@ -30,9 +30,23 @@ export class PluginEditor {
 
     private readonly filename: string;
 
+    private isDirty: boolean = false;
+    private saveButton: BaseWidget | null = null;
+
     getElement(): HTMLElement { return this.element; }
     getEditor(): Editor { return this.editor; }
     getFilename(): string { return this.filename; }
+
+    private setDirty(dirty: boolean): void {
+        this.isDirty = dirty;
+        this.updateSaveButtonState();
+    }
+
+    private updateSaveButtonState(): void {
+        if (this.saveButton) {
+            this.saveButton.setDisabled(!this.isDirty);
+        }
+    }
 
     private constructor(filename: string) {
 
@@ -62,8 +76,8 @@ export class PluginEditor {
 
         const instance = new PluginEditor(filename);
 
-        await instance.genToolbar();
         await instance.restoreOrInitFile(defaultEditorOptions);
+        await instance.genToolbar();
 
         return instance;
 
@@ -108,10 +122,11 @@ export class PluginEditor {
 
         const toolbar = this.editor.addToolbar();
 
-        // save button
-        const saveButton = toolbar.addSaveButton(async () => {
-            await this.saveCallback(saveButton);
+        // save button - store reference and initialize as disabled
+        this.saveButton = toolbar.addSaveButton(async () => {
+            await this.saveCallback();
         });
+        this.saveButton.setDisabled(true); // Start with clean state
 
         // restore toolbarFile state
         this.toolbarFile = new PluginFile(STORAGE_PATH, TOOLBAR_FILENAME, JSON_MIME);
@@ -126,9 +141,20 @@ export class PluginEditor {
             this.toolbarFile.save();
         });
 
+        // Set up change detection listeners
+        this.setupChangeListeners();
     }
 
-    private async saveCallback(saveButton: BaseWidget) {
+    private setupChangeListeners(): void {
+        // Content changes (drawing, adding objects, etc.)
+        this.editor.notifier.on(EditorEventType.CommandDone, () => this.setDirty(true));
+        this.editor.notifier.on(EditorEventType.CommandUndone, () => this.setDirty(true));
+
+        // Viewport changes (pan/zoom) - saved in SVG's editorView attribute
+        this.editor.notifier.on(EditorEventType.ViewportChanged, () => this.setDirty(true));
+    }
+
+    private async saveCallback() {
 
         const svgElem = this.editor.toSVG();
 
@@ -148,10 +174,8 @@ export class PluginEditor {
                 console.warn('Image refresh failed, but save succeeded:', refreshError);
             }
 
-            saveButton.setDisabled(true);
-            setTimeout(() => { // @todo improve save button feedback
-                saveButton.setDisabled(false);
-            }, 500);
+            // Mark as clean - disable save button
+            this.setDirty(false);
         } catch (error) {
             if(error instanceof InternationalizedError) {
                 ErrorReporter.error(error);

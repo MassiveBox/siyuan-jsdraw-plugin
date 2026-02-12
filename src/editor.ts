@@ -1,6 +1,7 @@
 import {MaterialIconProvider} from "@js-draw/material-icons";
 import {PluginAsset, PluginFile} from "@/file";
 import {JSON_MIME, STORAGE_PATH, SVG_MIME, TOOLBAR_FILENAME} from "@/const";
+import {refreshImagesForFile} from "@/refresh";
 import Editor, {
     BackgroundComponentBackgroundType,
     BaseWidget,
@@ -138,6 +139,15 @@ export class PluginEditor {
         try {
             this.drawingFile.setContent(svgElem.outerHTML);
             await this.drawingFile.save();
+
+            // Force refresh all images referencing this file
+            try {
+                const count = refreshImagesForFile(this.filename);
+                console.log(`Refreshing ${count} image(s) for ${this.filename}`);
+            } catch (refreshError) {
+                console.warn('Image refresh failed, but save succeeded:', refreshError);
+            }
+
             saveButton.setDisabled(true);
             setTimeout(() => { // @todo improve save button feedback
                 saveButton.setDisabled(false);

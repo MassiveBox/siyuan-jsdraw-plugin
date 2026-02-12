@@ -31,24 +31,6 @@ export class ErrorReporter {
 
 }
 
-export class SyncIDNotFoundError extends InternationalizedError {
-    constructor() {
-        super('syncIDNotFound');
-    }
-}
-
-export class UnchangedProtyleError extends InternationalizedError {
-    constructor() {
-        super('unchangedProtyle');
-    }
-}
-
-export class MultipleSyncIDsError extends InternationalizedError {
-    constructor() {
-        super('multipleSyncIDs');
-    }
-}
-
 export class GenericSaveError extends InternationalizedError {
     constructor() {
         super('saveGeneric');
@@ -67,9 +49,9 @@ export class InvalidBackgroundColorError extends InternationalizedError {
     }
 }
 
-export class NoFileIDError extends InternationalizedError {
+export class NoFilenameError extends InternationalizedError {
     constructor() {
-        super('noFileID');
+        super('noFileID');  // Keep key for backward compatibility with i18n
     }
 }
 

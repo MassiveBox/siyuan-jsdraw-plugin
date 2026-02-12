@@ -1,6 +1,5 @@
-import {getFileBlob, putFile, removeFile, upload} from "@/api";
+import {getFileBlob, putFile} from "@/api";
 import {ASSETS_PATH, DATA_PATH} from "@/const";
-import {assetPathToIDs, IDsToAssetName} from "@/helper";
 
 abstract class PluginFileBase {
 
@@ -44,11 +43,6 @@ abstract class PluginFileBase {
         this.content = text;
     }
 
-    async remove(customFilename?: string) {
-        let filename = customFilename || this.fileName;
-        await removeFile(this.folderPath + filename);
-    }
-
     protected toFile(customFilename?: string): File {
         let filename = customFilename || this.fileName;
         const blob = new Blob([this.content], { type: this.mimeType });
@@ -73,36 +67,18 @@ export class PluginFile extends PluginFileBase {
 
 export class PluginAsset extends PluginFileBase {
 
-    private fileID: string
-    private syncID: string
+    private filename: string
 
-    getFileID() { return this.fileID; }
-    getSyncID() { return this.syncID; }
+    getFilename() { return this.filename; }
 
-    constructor(fileID: string, syncID: string, mimeType: string) {
-        super(DATA_PATH + ASSETS_PATH, IDsToAssetName(fileID, syncID), mimeType);
-        this.fileID = fileID;
-        this.syncID = syncID;
+    constructor(filename: string, mimeType: string) {
+        super(DATA_PATH + ASSETS_PATH, filename, mimeType);
+        this.filename = filename;
     }
 
     async save() {
-
-        const file = this.toFile(this.fileID + '.svg');
-
-        let r = await upload('/' + ASSETS_PATH, [file]);
-        if (r.errFiles) {
-            throw new Error("Failed to upload file");
-        }
-        const ids = assetPathToIDs(r.succMap[file.name])
-
-        this.fileID = ids.fileID;
-        this.syncID = ids.syncID;
-        super.setFileName(IDsToAssetName(this.fileID, this.syncID));
-
-    }
-
-    async removeOld(oldSyncID: string) {
-        await super.remove(IDsToAssetName(this.fileID, oldSyncID));
+        const file = this.toFile();
+        await putFile(this.folderPath + this.filename, false, file);
     }
 
 }

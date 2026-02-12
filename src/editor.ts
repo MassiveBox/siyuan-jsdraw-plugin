@@ -11,14 +11,12 @@ import Editor, {
     Viewport
 } from "js-draw";
 import {Dialog, getFrontend, openTab, Plugin} from "siyuan";
-import {findSyncIDInProtyle, replaceSyncID} from "@/protyle";
 import DrawJSPlugin from "@/index";
 import {EditorOptions} from "@/config";
 import 'js-draw/styles';
 import {
     ErrorReporter,
-    GenericSaveError, InternationalizedError, NoFileIDError, SyncIDNotFoundError,
-    UnchangedProtyleError
+    GenericSaveError, InternationalizedError, NoFilenameError
 } from "@/errors";
 
 export class PluginEditor {
@@ -29,18 +27,15 @@ export class PluginEditor {
     private drawingFile: PluginAsset;
     private toolbarFile: PluginFile;
 
-    private readonly fileID: string;
-    private syncID: string;
+    private readonly filename: string;
 
     getElement(): HTMLElement { return this.element; }
     getEditor(): Editor { return this.editor; }
-    getFileID(): string { return this.fileID; }
-    getSyncID(): string { return this.syncID; }
-    setSyncID(syncID: string) { this.syncID = syncID; }
+    getFilename(): string { return this.filename; }
 
-    private constructor(fileID: string) {
+    private constructor(filename: string) {
 
-        this.fileID = fileID;
+        this.filename = filename;
 
         this.element = document.createElement("div");
         this.element.style.height = '100%';
@@ -62,17 +57,11 @@ export class PluginEditor {
 
     }
 
-    static async create(fileID: string, defaultEditorOptions: EditorOptions): Promise<PluginEditor> {
+    static async create(filename: string, defaultEditorOptions: EditorOptions): Promise<PluginEditor> {
 
-        const instance = new PluginEditor(fileID);
+        const instance = new PluginEditor(filename);
 
         await instance.genToolbar();
-        let syncID = await findSyncIDInProtyle(fileID);
-
-        if(syncID == null) {
-            throw new SyncIDNotFoundError();
-        }
-        instance.setSyncID(syncID);
         await instance.restoreOrInitFile(defaultEditorOptions);
 
         return instance;
@@ -81,7 +70,7 @@ export class PluginEditor {
 
     async restoreOrInitFile(defaultEditorOptions: EditorOptions) {
 
-        this.drawingFile = new PluginAsset(this.fileID, this.syncID, SVG_MIME);
+        this.drawingFile = new PluginAsset(this.filename, SVG_MIME);
         await this.drawingFile.loadFromSiYuanFS();
         const drawingContent = this.drawingFile.getContent();
 
@@ -141,8 +130,6 @@ export class PluginEditor {
     private async saveCallback(saveButton: BaseWidget) {
 
         const svgElem = this.editor.toSVG();
-        let newSyncID: string;
-        const oldSyncID = this.syncID;
 
         const rect = this.editor.viewport.visibleRect;
         const zoom = this.editor.viewport.getScaleFactor();
@@ -151,12 +138,6 @@ export class PluginEditor {
         try {
             this.drawingFile.setContent(svgElem.outerHTML);
             await this.drawingFile.save();
-            newSyncID = this.drawingFile.getSyncID();
-            if(newSyncID != oldSyncID) { // supposed to replace protyle
-                const changed = await replaceSyncID(this.fileID, oldSyncID, newSyncID); // try to change protyle
-                if(!changed) throw new UnchangedProtyleError();
-                await this.drawingFile.removeOld(oldSyncID);
-            }
             saveButton.setDisabled(true);
             setTimeout(() => { // @todo improve save button feedback
                 saveButton.setDisabled(false);
@@ -173,8 +154,6 @@ export class PluginEditor {
             return;
         }
 
-        this.syncID = newSyncID;
-
     }
 
 }
@@ -184,10 +163,10 @@ export class EditorManager {
     private editor: PluginEditor
     setEditor(editor: PluginEditor) { this.editor = editor;}
 
-    static async create(fileID: string, p: DrawJSPlugin) {
+    static async create(filename: string, p: DrawJSPlugin) {
         let instance = new EditorManager();
         try {
-            let editor = await PluginEditor.create(fileID, p.config.options.editorOptions);
+            let editor = await PluginEditor.create(filename, p.config.options.editorOptions);
             instance.setEditor(editor);
         }catch (error) {
             ErrorReporter.error(error);
@@ -199,13 +178,13 @@ export class EditorManager {
         p.addTab({
             'type': "whiteboard",
             async init() {
-                const fileID = this.data.fileID;
-                if (fileID == null) {
-                    ErrorReporter.error(new NoFileIDError());
+                const filename = this.data.filename;
+                if (filename == null) {
+                    ErrorReporter.error(new NoFilenameError());
                     return;
                 }
                 try {
-                    const editor = await PluginEditor.create(fileID, p.config.options.editorOptions);
+                    const editor = await PluginEditor.create(filename, p.config.options.editorOptions);
                     this.element.appendChild(editor.getElement());
                 }catch (error){
                     ErrorReporter.error(error);
@@ -222,7 +201,7 @@ export class EditorManager {
                 icon: 'iconDraw',
                 id: "siyuan-jsdraw-pluginwhiteboard",
                 data: {
-                    fileID: this.editor.getFileID(),
+                    filename: this.editor.getFilename(),
                 }
             }
         });

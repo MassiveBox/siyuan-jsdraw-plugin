@@ -23,59 +23,20 @@ export function getMenuHTML(icon: string, text: string): string {
     `;
 }
 
-export function generateTimeString() {
-    const now = new Date();
-
-    const year = now.getFullYear().toString();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
-
-    return `${year}${month}${day}${hours}${minutes}${seconds}`;
+export function filenameToAssetPath(filename: string): string {
+    return `${ASSETS_PATH}${filename}`;
 }
 
-export function generateRandomString() {
-
-    const characters = 'abcdefghijklmnopqrstuvwxyz';
-    let random = '';
-    for (let i = 0; i < 7; i++) {
-        random += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return random;
-
-}
-
-export function IDsToAssetName(fileID: string, syncID: string) {
-    return `${fileID}-${syncID}.svg`;
-}
-export function IDsToAssetPath(fileID: string, syncID: string) {
-    return `${ASSETS_PATH}${IDsToAssetName(fileID, syncID)}`
-}
-export function assetPathToIDs(assetPath: string): { fileID: string; syncID: string } | null {
+export function assetPathToFilename(assetPath: string): string | null {
 
     const filename = assetPath.split('/').pop() || '';
     if (!filename.endsWith('.svg')) return null;
-
-    // Split into [basename, extension] and check format
-    const [basename] = filename.split('.');
-    const parts = basename.split('-');
-
-    // Must contain exactly 2 hyphens separating 3 non-empty parts
-    if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return null;
-
-    return {
-        fileID: parts[0],
-        syncID: parts[1] + '-' + parts[2]
-    };
+    return filename;
 
 }
 
-export function getMarkdownBlock(fileID: string, syncID: string): string {
-    return `
-    ![Drawing](${IDsToAssetPath(fileID, syncID)})
-    `
+export function getMarkdownBlock(filename: string): string {
+    return `![Drawing](${filenameToAssetPath(filename)})`;
 }
 
 // given a tag (such as a div) containing an image as a child at any level, return the src of the image
@@ -96,14 +57,13 @@ export function findImgSrc(element: HTMLElement): string | null {
     return null;
 }
 
-export function imgSrcToIDs(imgSrc: string | null): { fileID: string; syncID: string } | null {
+export function imgSrcToFilename(imgSrc: string | null): string | null {
 
     if (!imgSrc) return null;
 
     const url = new URL(imgSrc);
-    imgSrc = decodeURIComponent(url.pathname);
-
-    return assetPathToIDs(imgSrc);
+    const path = decodeURIComponent(url.pathname);
+    return assetPathToFilename(path);
 
 }
 

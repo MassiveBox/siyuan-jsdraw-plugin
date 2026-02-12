@@ -4,8 +4,7 @@ import {
     loadIcons,
     getMenuHTML,
     findImgSrc,
-    imgSrcToIDs, generateTimeString, generateRandomString
-} from "@/helper";
+    imgSrcToFilename} from "@/helper";
 import {EditorManager} from "@/editor";
 import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
@@ -31,22 +30,23 @@ export default class DrawJSPlugin extends Plugin {
             html: getMenuHTML("iconDraw", this.i18n.insertWhiteboard),
             callback: async (protyle: Protyle) => {
                 void this.analytics.sendEvent('create');
-                const fileID = generateRandomString();
-                const syncID = generateTimeString() + '-' + generateRandomString();
-                protyle.insert(getMarkdownBlock(fileID, syncID), false, false);
-                (await EditorManager.create(fileID, this)).open(this);
+                const filename = `jsdraw-${window.Lute.NewNodeID()}.svg`;
+                protyle.insert(getMarkdownBlock(filename), false, false);
+                (await EditorManager.create(filename, this)).open(this);
             }
         }];
 
         this.eventBus.on("open-menu-image", (e: any) => {
-            const ids = imgSrcToIDs(findImgSrc(e.detail.element));
-            if (ids === null) return;
+            const imgSrc = findImgSrc(e.detail.element);
+            if (!imgSrc) return;
+            const filename = imgSrcToFilename(imgSrc);
+            if (!filename || !filename.endsWith('.svg')) return;
             e.detail.menu.addItem({
                 icon: "iconDraw",
                 label: this.i18n.editWhiteboard,
                 click: async () => {
                     void this.analytics.sendEvent('edit');
-                    (await EditorManager.create(ids.fileID, this)).open(this);
+                    (await EditorManager.create(filename, this)).open(this);
                 }
             })
         })
@@ -85,12 +85,16 @@ export default class DrawJSPlugin extends Plugin {
             throw new MustSelectError();
         }
 
-        let ids = imgSrcToIDs(findImgSrc(selectedImg[0] as HTMLElement));
-        if(ids == null) {
+        const imgSrc = findImgSrc(selectedImg[0] as HTMLElement);
+        if(!imgSrc) {
+            throw new NotAWhiteboardError();
+        }
+        const filename = imgSrcToFilename(imgSrc);
+        if(!filename || !filename.endsWith('.svg')) {
             throw new NotAWhiteboardError();
         }
         void this.analytics.sendEvent('edit');
-        (await EditorManager.create(ids.fileID, this)).open(this);
+        (await EditorManager.create(filename, this)).open(this);
 
     }
 

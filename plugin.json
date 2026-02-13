@@ -2,7 +2,7 @@
   "name": "siyuan-jsdraw-plugin",
   "author": "massivebox",
   "url": "https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "minAppVersion": "3.0.12",
   "backends": [
     "windows",

@@ -3,6 +3,8 @@
 
 This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan documents.
 
+▶️ [LiuYun thread](https://liuyun.io/article/1770978310553)
+
 ## Usage instructions
 ![Demo](asset/demo.webp)
 - Install the plugin from the marketplace. You can find it by searching for `js-draw`. 

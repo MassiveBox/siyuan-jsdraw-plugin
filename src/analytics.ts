@@ -1,5 +1,4 @@
 import {getBackend, getFrontend} from "siyuan";
-import {JSON_MIME} from "@/const";
 import packageJson from '../package.json' assert { type: 'json' };
 
 export class Analytics {
@@ -13,11 +12,11 @@ export class Analytics {
         this.enabled = enabled;
     }
 
-    async sendEvent(name: string) {
+    async sendEvent(name: string, addData?: Record<string, string>) {
 
         if(!this.enabled) return;
 
-        const sendData = (name == 'load' || name == 'install') ?
+        const sendData: Record<string, string> = (name == 'load' || name == 'install') ?
             {
                 'appVersion': window.navigator.userAgent.split(' ')[0],
                 'pluginVersion': packageJson.version,
@@ -25,12 +24,13 @@ export class Analytics {
                 'backend': getBackend(),
                 'language': navigator.language,
                 'appLanguage': window.siyuan.config.lang,
-            } : {};
+                ...addData
+            } : { ...addData };
 
         await fetch(Analytics.ENDPOINT, {
             method: 'POST',
             headers: {
-                'Content-Type': JSON_MIME,
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 type: 'event',

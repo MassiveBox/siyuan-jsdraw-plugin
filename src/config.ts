@@ -8,6 +8,7 @@ import {ErrorReporter, InvalidBackgroundColorError} from "@/errors";
 export interface Options {
     dialogOnDesktop: boolean
     analytics: boolean
+    noSelectionAction: 'ask' | 'create' | 'nothing'
     editorOptions: EditorOptions
 }
 export interface EditorOptions {
@@ -40,6 +41,7 @@ export class PluginConfig {
         this.options = {
             dialogOnDesktop: getFirstDefined(jsonObj?.dialogOnDesktop, false),
             analytics: getFirstDefined(jsonObj?.analytics, true),
+            noSelectionAction: getFirstDefined(jsonObj?.noSelectionAction, 'ask'),
             editorOptions: {
                 restorePosition: getFirstDefined(jsonObj?.editorOptions?.restorePosition, jsonObj?.restorePosition,  true),
                 grid: getFirstDefined(jsonObj?.editorOptions?.grid, jsonObj?.grid, true),
@@ -87,26 +89,35 @@ export class PluginConfigViewer {
         this.populateSettingMenu();
     }
 
-    async configSaveCallback(data) {
+    private buildOptionsFromData(data: any): { options: Options, color: string } {
+        const color = data.backgroundDropdown === "CUSTOM" ? data.background : data.backgroundDropdown;
+        return {
+            options: {
+                dialogOnDesktop: !!data.dialogOnDesktop,
+                analytics: !!data.analytics,
+                noSelectionAction: data.noSelectionAction || 'ask',
+                editorOptions: {
+                    grid: !!data.grid,
+                    background: PluginConfig.validateColor(color)
+                        ? color
+                        : this.config.options.editorOptions.background,
+                    restorePosition: !!data.restorePosition,
+                }
+            },
+            color
+        };
+    }
 
-        let color = data.backgroundDropdown === "CUSTOM" ? data.background : data.backgroundDropdown;
-        if(!PluginConfig.validateColor(color)) {
+    async configSaveCallback(data) {
+        const { options, color } = this.buildOptionsFromData(data);
+        if (!PluginConfig.validateColor(color)) {
             ErrorReporter.error(new InvalidBackgroundColorError());
             data.background = this.config.options.editorOptions.background;
             this.settingUtils.set('background', data.background);
+            options.editorOptions.background = data.background;
         }
-
-        this.config.setConfig({
-            dialogOnDesktop: data.dialogOnDesktop,
-            analytics: data.analytics,
-            editorOptions: {
-                grid: data.grid,
-                background: color,
-                restorePosition: data.restorePosition,
-            }
-        });
+        this.config.setConfig(options);
         await this.config.save();
-
     }
 
     populateSettingMenu() {
@@ -162,6 +173,24 @@ export class PluginConfigViewer {
         });
 
         this.settingUtils.addItem({
+            key: "noSelectionAction",
+            title: this.plugin.i18n.settings.noSelectionAction.title,
+            description: this.plugin.i18n.settings.noSelectionAction.description,
+            type: 'select',
+            value: this.config.options.noSelectionAction,
+            options: {
+                'ask': this.plugin.i18n.settings.noSelectionAction.options.ask,
+                'create': this.plugin.i18n.settings.noSelectionAction.options.create,
+                'nothing': this.plugin.i18n.settings.noSelectionAction.options.nothing,
+            },
+            action: {
+                callback: () => {
+                    this.config.options.noSelectionAction = this.settingUtils.take('noSelectionAction', true) as Options['noSelectionAction'];
+                }
+            },
+        });
+
+        this.settingUtils.addItem({
             key: "analytics",
             title: this.plugin.i18n.settings.analytics.title,
             description: this.plugin.i18n.settings.analytics.description,
@@ -171,8 +200,11 @@ export class PluginConfigViewer {
 
     }
 
-    load() {
-        return this.settingUtils.load();
+    async load() {
+        const data = await this.settingUtils.load();
+        const { options } = this.buildOptionsFromData(data);
+        this.config.setConfig(options);
+        return data;
     }
 
 }

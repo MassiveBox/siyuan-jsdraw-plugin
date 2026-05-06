@@ -1,7 +1,7 @@
 {
   "insertWhiteboard": "Insert whiteboard",
   "editWhiteboard": "Edit whiteboard",
-  "editShortcut": "Edit selected whiteboard",
+  "editShortcut": "Edit selected or create new whiteboard",
   "errors": {
     "noFileID": "File ID missing - couldn't open file.",
     "notAWhiteboard": "You must select a whiteboard, not a regular image. <a href='https://s.boxo.cc/jsdraw-plugin-instructions'>Usage instructions</a>",
@@ -11,7 +11,12 @@
     "multipleSyncIDs": "Multiple syncIDs found in documents. Remove the drawings that don't exist from your documents.\n Sync conflict copies can cause this error, so make sure to delete them.\nFile IDs (the part you can change in the Rename menu) must be unique across all documents.\n<a href='https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/wiki/Errors-and-Fixes#multiple-syncids-found'>Full explanation</a>",
     "unchangedProtyle": "Make sure the image you're trying to edit still exists in your documents.",
     "saveGeneric": "Error saving! The current drawing has been copied to your clipboard. You may need to create a new drawing and paste it there.",
-    "mustSelect": "Select a whiteboard in your document by left-clicking it, then use this icon/shortcut to open the editor directly.  <a href='https://s.boxo.cc/jsdraw-plugin-instructions'>Usage instructions</a>"
+    "mustSelect": "Select a whiteboard in your document by left-clicking it, then use this icon/shortcut to open the editor directly.  <a href='https://s.boxo.cc/jsdraw-plugin-instructions'>Usage instructions</a>",
+    "uninitializedProtyle": "No active document found. Please open and click inside a document first, then try again."
+  },
+  "createConfirm": {
+    "title": "Create Whiteboard",
+    "message": "No whiteboard is selected, so a new one will be created at the current cursor position. Proceed?<br>You can select a whiteboard by left-clicking it before triggering the shortcut.<br>You can also change the default behavior in the plugin settings."
   },
   "whiteboard": "Whiteboard",
   "settings": {
@@ -47,6 +52,15 @@
     "restorePosition": {
       "title": "Remember editor position",
       "description": "When enabled, the editor will remember the zoom factor and position, and it will restore them the next time you open the same whiteboard."
+    },
+    "noSelectionAction": {
+      "title": "Shortcut without selection",
+      "description": "What to do when the shortcut is pressed but no whiteboard is selected.",
+      "options": {
+        "ask": "Ask before creating",
+        "create": "Create automatically",
+        "nothing": "Do nothing"
+      }
     }
   }
 }

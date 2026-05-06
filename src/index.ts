@@ -8,8 +8,9 @@ import {
 import {EditorManager} from "@/editor";
 import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
-import {ErrorReporter, MustSelectError, NotAWhiteboardError} from "@/errors";
+import {ErrorReporter, MustSelectError, NotAWhiteboardError, UninitializedProtyleError} from "@/errors";
 import { sql } from './api';
+import { confirmDialog } from '@/libs/dialog';
 
 export default class DrawJSPlugin extends Plugin {
 
@@ -90,9 +91,11 @@ export default class DrawJSPlugin extends Plugin {
         let selectedImg = document.getElementsByClassName('img--select');
         if(selectedImg.length == 0) { // create image
             if (!protyle) {
-                throw new MustSelectError();
+                throw new UninitializedProtyleError();
             }
-            return this.shortcutCreate(protyle);
+            const action = this.config.options.noSelectionAction;
+            if (action === 'nothing') throw new MustSelectError();
+            return this.shortcutCreate(protyle, action === 'ask');
         }
 
         const imgSrc = findImgSrc(selectedImg[0] as HTMLElement);
@@ -108,7 +111,19 @@ export default class DrawJSPlugin extends Plugin {
 
     }
 
-    private async shortcutCreate(protyle: Protyle) {
+    private async shortcutCreate(protyle: Protyle, askFirst: boolean = true) {
+        if (askFirst) {
+            const confirmed = await new Promise<boolean>((resolve) => {
+                confirmDialog({
+                    title: this.i18n.createConfirm.title,
+                    content: this.i18n.createConfirm.message,
+                    confirm: () => resolve(true),
+                    cancel: () => resolve(false),
+                });
+            });
+            if (!confirmed) return;
+        }
+
         const filename = `jsdraw-${window.Lute.NewNodeID()}.svg`;
         protyle.insert(getMarkdownBlock(filename), false, true);
         for (let i = 0; i < 50; i++) {

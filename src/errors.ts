@@ -60,3 +60,9 @@ export class MustSelectError extends InternationalizedError {
         super('mustSelect');
     }
 }
+
+export class UninitializedProtyleError extends InternationalizedError {
+    constructor() {
+        super('uninitializedProtyle');
+    }
+}

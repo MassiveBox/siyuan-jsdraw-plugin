@@ -1,7 +1,7 @@
 {
   "insertWhiteboard": "插入白板",
   "editWhiteboard": "编辑白板",
-  "editShortcut": "编辑选中的白板",
+  "editShortcut": "编辑选中或创建新白板",
   "errors": {
     "noFileID": "缺少文件 ID，无法打开文件。",
     "notAWhiteboard": "您必须选择白板，而不是普通图片。<a href='https://s.boxo.cc/jsdraw-plugin-instructions-zh-cn'>使用说明</a>",
@@ -11,7 +11,12 @@
     "multipleSyncIDs": "在文档中发现多个 syncID。请从文档中删除不存在的绘图。\n同步冲突副本可能导致此错误，因此请务必删除它们。\n文件 ID（可在重命名菜单中更改的部分）在所有文档中必须唯一。\n<a href='https://s.boxo.cc/jsdraw-plugin-multiple-syncids-zh-cn'>完整说明</a>",
     "unchangedProtyle": "请确保您尝试编辑的图片仍存在于文档中。",
     "saveGeneric": "保存出错！当前绘图已复制到剪贴板。您可能需要新建一个绘图并粘贴进去。",
-    "mustSelect": "先在文档中左键点击选中白板，然后使用此图标/快捷键直接打开编辑器。<a href='https://s.boxo.cc/jsdraw-plugin-instructions-zh-cn'>使用说明</a>"
+    "mustSelect": "先在文档中左键点击选中白板，然后使用此图标/快捷键直接打开编辑器。<a href='https://s.boxo.cc/jsdraw-plugin-instructions-zh-cn'>使用说明</a>",
+    "uninitializedProtyle": "未找到活动文档。请先打开一个文档并点击其中，然后重试。"
+  },
+  "createConfirm": {
+    "title": "创建白板",
+    "message": "未选中白板，将在当前光标位置创建新白板。是否继续？<br>您可以在触发快捷键前左键点击选中白板。<br>您也可以在插件设置中更改默认行为。"
   },
   "whiteboard": "白板",
   "settings": {
@@ -47,6 +52,15 @@
     "restorePosition": {
       "title": "记住编辑器位置",
       "description": "开启后，编辑器会记住缩放比例和位置，下次打开同一白板时恢复。"
+    },
+    "noSelectionAction": {
+      "title": "未选中白板时的快捷键行为",
+      "description": "按下快捷键但未选中白板时的操作。",
+      "options": {
+        "ask": "创建前询问",
+        "create": "自动创建",
+        "nothing": "不执行任何操作"
+      }
     }
   }
 }

@@ -11,6 +11,7 @@ import {Analytics} from "@/analytics";
 import {ErrorReporter, MustSelectError, NotAWhiteboardError, UninitializedProtyleError} from "@/errors";
 import { sql } from './api';
 import { confirmDialog } from '@/libs/dialog';
+import { setupRefreshListener, teardownRefreshListener } from '@/refresh';
 
 export default class DrawJSPlugin extends Plugin {
 
@@ -23,6 +24,7 @@ export default class DrawJSPlugin extends Plugin {
         new ErrorReporter(this.i18n);
         loadIcons(this);
         EditorManager.registerTab(this);
+        setupRefreshListener();
 
         await this.startConfig();
         await this.startAnalytics();
@@ -79,6 +81,7 @@ export default class DrawJSPlugin extends Plugin {
     }
 
     onunload() {
+        teardownRefreshListener();
         void this.analytics.sendEvent("unload");
     }
 

@@ -1,5 +1,8 @@
 import { filenameToAssetPath } from "@/helper";
 
+const BROADCAST_CHANNEL_NAME = 'jsdraw-image-refresh';
+let channel: BroadcastChannel | null = null;
+
 /**
  * Find all img elements in the DOM that reference a specific asset file
  */
@@ -22,11 +25,13 @@ function findImagesByFilename(filename: string): HTMLImageElement[] {
 /**
  * Refresh all images in the document that reference the specified file
  * Uses fetch with cache:'reload' to bypass browser cache, then resets img src
+ * Uses broadcast channel to notify other windows to refresh the image
  *
  * @param filename - The asset filename (e.g., "jsdraw-abc123.svg")
+ * @param isBroadcast - Whether this is a broadcast message (to avoid infinite loops)
  * @returns Number of images found for refresh
  */
-export function refreshImagesForFile(filename: string): number {
+export function refreshImagesForFile(filename: string, isBroadcast: boolean = false): number {
     const images = findImagesByFilename(filename);
 
     for (const img of images) {
@@ -47,5 +52,38 @@ export function refreshImagesForFile(filename: string): number {
             });
     }
 
+    if (!isBroadcast) { // if this is the original call, broadcast to other windows
+        try {
+            if (!channel) {
+                channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
+            }
+            channel.postMessage({ type: 'refresh', filename });
+        } catch (e) {
+            console.warn(`Failed to broadcast image refresh: ${e}`);
+        }
+    }
+
     return images.length;
+}
+
+export function setupRefreshListener(): void {
+    try {
+        if (!channel) {
+            channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
+        }
+        channel.onmessage = (event: MessageEvent) => {
+            if (event.data?.type === 'refresh' && event.data?.filename) {
+                refreshImagesForFile(event.data.filename, true);
+            }
+        };
+    } catch (e) {
+        console.warn(`Failed to set up refresh listener: ${e}`);
+    }
+}
+
+export function teardownRefreshListener(): void {
+    if (channel) {
+        channel.close();
+        channel = null;
+    }
 }

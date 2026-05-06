@@ -35,7 +35,7 @@ export default class DrawJSPlugin extends Plugin {
             filter: ["Insert Drawing", "Add drawing", "Insert whiteboard", "Add whiteboard", "whiteboard", "freehand", "graphics", "jsdraw", this.i18n.insertWhiteboard],
             html: getMenuHTML("iconDraw", this.i18n.insertWhiteboard),
             callback: async (protyle: Protyle) => {
-                void this.analytics.sendEvent('create');
+                void this.analytics.sendEvent('create', {'from': 'slash'});
                 const filename = `jsdraw-${window.Lute.NewNodeID()}.svg`;
                 protyle.insert(getMarkdownBlock(filename), false, false);
                 (await EditorManager.create(filename, this)).open(this);
@@ -51,7 +51,7 @@ export default class DrawJSPlugin extends Plugin {
                 icon: "iconDraw",
                 label: this.i18n.editWhiteboard,
                 click: async () => {
-                    void this.analytics.sendEvent('edit');
+                    void this.analytics.sendEvent('edit', {'from': 'menu'});
                     (await EditorManager.create(filename, this)).open(this);
                 }
             })
@@ -103,7 +103,7 @@ export default class DrawJSPlugin extends Plugin {
         if(!filename || !filename.endsWith('.svg')) {
             throw new NotAWhiteboardError();
         }
-        void this.analytics.sendEvent('edit');
+        void this.analytics.sendEvent('edit', {'from': 'shortcut'});
         (await EditorManager.create(filename, this)).open(this);
 
     }
@@ -116,7 +116,7 @@ export default class DrawJSPlugin extends Plugin {
             const rows = await sql(`SELECT * FROM blocks WHERE content LIKE '%${filename}%'`);
             if (rows && rows.length > 0) break;
         }
-        void this.analytics.sendEvent('create');
+        void this.analytics.sendEvent('create', {'from': 'shortcut'});
         (await EditorManager.create(filename, this)).open(this);
         return;
     }

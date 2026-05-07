@@ -23,6 +23,8 @@ import {
 
 type CloseAction = 'save' | 'discard';
 
+const openEditors: Set<PluginEditor> = new Set();
+
 function confirmUnsavedChanges(
     i18n: any,
     oldSVG: string | null,
@@ -97,6 +99,10 @@ export class PluginEditor {
     getFilename(): string { return this.filename; }
     getIsDirty(): boolean { return this.isDirty; }
     async autosave(): Promise<void> { await this.saveCallback(true); }
+
+    static getOpenEditors(): ReadonlySet<PluginEditor> { return openEditors; }
+
+    unregister(): void { openEditors.delete(this); }
 
     setOnClose(callback: () => void): void {
         if (this.toolbar) {
@@ -174,6 +180,8 @@ export class PluginEditor {
 
         await instance.restoreOrInitFile(defaultEditorOptions);
         await instance.genToolbar();
+
+        openEditors.add(instance);
 
         return instance;
 
@@ -327,7 +335,10 @@ export class EditorManager {
             },
             beforeDestroy() {
                 const editor = (this as any)._pluginEditor as PluginEditor | undefined;
-                if (!editor?.getIsDirty()) return;
+                if (!editor?.getIsDirty()) {
+                    editor?.unregister();
+                    return;
+                }
 
                 const oldSVG = editor.getSavedSVG();
                 const newSVG = editor.getCurrentSVG();
@@ -340,7 +351,8 @@ export class EditorManager {
                             await editor.restoreSavedVersion();
                         }
                     })
-                    .catch(e => console.warn('Rollback failed:', e));
+                    .catch(e => console.warn('Rollback failed:', e))
+                    .finally(() => editor.unregister());
             }
         });
     }
@@ -364,6 +376,7 @@ export class EditorManager {
 
         pluginEditor.setOnClose(async () => {
             if (!pluginEditor.getIsDirty()) {
+                pluginEditor.unregister();
                 dialog.destroy();
                 return;
             }
@@ -378,6 +391,7 @@ export class EditorManager {
             } catch (e) {
                 console.warn('Close handler failed:', e);
             }
+            pluginEditor.unregister();
             dialog.destroy();
         });
 

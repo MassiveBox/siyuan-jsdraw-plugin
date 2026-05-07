@@ -5,7 +5,7 @@ import {
     getMenuHTML,
     findImgSrc,
     imgSrcToFilename} from "@/helper";
-import {EditorManager} from "@/editor";
+import {EditorManager, PluginEditor} from "@/editor";
 import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
 import {ErrorReporter, MustSelectError, NotAWhiteboardError, UninitializedProtyleError} from "@/errors";
@@ -58,6 +58,16 @@ export default class DrawJSPlugin extends Plugin {
                     (await EditorManager.create(filename, this)).open(this);
                 }
             })
+        })
+
+        this.eventBus.on("ws-main", (e: any) => {
+            if (e.detail?.cmd === "exit") {
+                for (const editor of PluginEditor.getOpenEditors()) {
+                    if (editor.getIsDirty()) {
+                        editor.autosave().catch(() => {});
+                    }
+                }
+            }
         })
 
         this.addCommand({

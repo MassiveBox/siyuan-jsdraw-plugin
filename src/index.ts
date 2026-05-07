@@ -139,11 +139,6 @@ export default class DrawJSPlugin extends Plugin {
 
         const filename = `jsdraw-${window.Lute.NewNodeID()}.svg`;
         protyle.insert(getMarkdownBlock(filename), false, true);
-        for (let i = 0; i < 50; i++) {
-            await new Promise(r => setTimeout(r, 200));
-            const rows = await sql(`SELECT * FROM blocks WHERE content LIKE '%${filename}%'`);
-            if (rows && rows.length > 0) break;
-        }
         void this.analytics.sendEvent('create', {'from': 'shortcut'});
         (await EditorManager.create(filename, this)).open(this);
         return;

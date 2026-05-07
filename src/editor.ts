@@ -3,6 +3,7 @@ import {PluginAsset, PluginFile} from "@/file";
 import {JSON_MIME, STORAGE_PATH, SVG_MIME, TOOLBAR_FILENAME} from "@/const";
 import {refreshImagesForFile} from "@/refresh";
 import Editor, {
+    AbstractToolbar,
     BackgroundComponentBackgroundType,
     BaseWidget,
     Color4,
@@ -20,6 +21,60 @@ import {
     GenericSaveError, InternationalizedError, NoFilenameError
 } from "@/errors";
 
+type CloseAction = 'save' | 'discard';
+
+function confirmUnsavedChanges(
+    i18n: any,
+    oldSVG: string | null,
+    newSVG: string
+): Promise<CloseAction> {
+    const oldPreview = oldSVG
+        ? `<div style="flex:1; text-align:center;">
+            <div style="font-weight:bold; margin-bottom:4px;">${i18n.unsavedConfirm.oldVersion}</div>
+            <div style="border:1px solid var(--b3-border-color); border-radius:4px; overflow:hidden; background:var(--b3-theme-background); padding:4px;">
+                <img src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(oldSVG)}" style="width:100%; height:auto; max-height:200px; object-fit:contain;" />
+            </div>
+        </div>`
+        : '';
+    const newPreview = `<div style="flex:1; text-align:center;">
+        <div style="font-weight:bold; margin-bottom:4px;">${i18n.unsavedConfirm.autoSavedVersion}</div>
+        <div style="border:1px solid var(--b3-border-color); border-radius:4px; overflow:hidden; background:var(--b3-theme-background); padding:4px;">
+            <img src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(newSVG)}" style="width:100%; height:auto; max-height:200px; object-fit:contain;" />
+        </div>
+    </div>`;
+
+    return new Promise((resolve) => {
+        let resolved = false;
+        const dialog = new Dialog({
+            title: i18n.unsavedConfirm.title,
+            content: `<div class="b3-dialog__content">
+    <div class="ft__breakword">${i18n.unsavedConfirm.message}</div>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+        ${oldPreview}${newPreview}
+    </div>
+</div>
+<div class="b3-dialog__action">
+    <button class="b3-button b3-button--error" data-action="discard">${i18n.unsavedConfirm.discard}</button><div class="fn__space"></div>
+    <button class="b3-button b3-button--success" data-action="save">${i18n.unsavedConfirm.save}</button>
+</div>`,
+            width: "640px",
+            destroyCallback: () => {
+                if (!resolved) resolve('save');
+            },
+        });
+
+        const buttons = dialog.element.querySelectorAll(".b3-button");
+        buttons.forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const action = (btn as HTMLElement).getAttribute("data-action") as CloseAction;
+                resolved = true;
+                dialog.destroy();
+                resolve(action);
+            });
+        });
+    });
+}
+
 export class PluginEditor {
 
     private readonly element: HTMLElement;
@@ -32,12 +87,51 @@ export class PluginEditor {
 
     private isDirty: boolean = false;
     private saveButton: BaseWidget | null = null;
+    private toolbar: AbstractToolbar | null = null;
+    private savedSVG: string | null = null;
 
     private static readonly viewParam: string = 'editorview';
 
     getElement(): HTMLElement { return this.element; }
     getEditor(): Editor { return this.editor; }
     getFilename(): string { return this.filename; }
+    getIsDirty(): boolean { return this.isDirty; }
+    async autosave(): Promise<void> { await this.saveCallback(true); }
+
+    setOnClose(callback: () => void): void {
+        if (this.toolbar) {
+            this.toolbar.addExitButton(callback);
+        }
+    }
+
+    getSavedSVG(): string | null {
+        return this.savedSVG;
+    }
+
+    async restoreSavedVersion(): Promise<void> {
+        if (this.savedSVG != null) {
+            this.drawingFile.setContent(this.savedSVG);
+            await this.drawingFile.save();
+            try { refreshImagesForFile(this.filename); } catch (e) { console.warn(e); }
+        }
+    }
+
+    getCurrentSVG(): string {
+        return this.serializeSVGWithViewport();
+    }
+
+    private serializeSVGWithViewport(): string {
+        const svgElem = this.editor.toSVG();
+        const rect = this.editor.viewport.visibleRect;
+        const zoom = this.editor.viewport.getScaleFactor();
+        Array.from(svgElem.attributes).forEach(attr => {
+            if (attr.name.toLowerCase() === PluginEditor.viewParam) {
+                svgElem.removeAttribute(attr.name);
+            }
+        });
+        svgElem.setAttribute(PluginEditor.viewParam, `${rect.x} ${rect.y} ${zoom}`);
+        return svgElem.outerHTML;
+    }
 
     private setDirty(dirty: boolean): void {
         this.isDirty = dirty;
@@ -90,6 +184,7 @@ export class PluginEditor {
         this.drawingFile = new PluginAsset(this.filename, SVG_MIME);
         await this.drawingFile.loadFromSiYuanFS();
         const drawingContent = this.drawingFile.getContent();
+        this.savedSVG = drawingContent;
 
         if(drawingContent != null) {
 
@@ -118,11 +213,16 @@ export class PluginEditor {
             }));
         }
 
+        if (this.savedSVG == null) {
+            this.savedSVG = this.serializeSVGWithViewport();
+        }
+
     }
 
     async genToolbar() {
 
         const toolbar = this.editor.addToolbar();
+        this.toolbar = toolbar;
 
         // save button - store reference and initialize as disabled
         this.saveButton = toolbar.addSaveButton(async () => {
@@ -156,22 +256,12 @@ export class PluginEditor {
         this.editor.notifier.on(EditorEventType.ViewportChanged, () => this.setDirty(true));
     }
 
-    private async saveCallback() {
+    private async saveCallback(silent: boolean = false) {
 
-        const svgElem = this.editor.toSVG();
-
-        const rect = this.editor.viewport.visibleRect;
-        const zoom = this.editor.viewport.getScaleFactor();
-
-        Array.from(svgElem.attributes).forEach(attr => {
-            if (attr.name.toLowerCase() === PluginEditor.viewParam) {
-                svgElem.removeAttribute(attr.name); // fix duplicate param
-            }
-        });
-        svgElem.setAttribute(PluginEditor.viewParam, `${rect.x} ${rect.y} ${zoom}`)
+        const serialized = this.serializeSVGWithViewport();
 
         try {
-            this.drawingFile.setContent(svgElem.outerHTML);
+            this.drawingFile.setContent(serialized);
             await this.drawingFile.save();
 
             // Force refresh all images referencing this file
@@ -183,6 +273,9 @@ export class PluginEditor {
 
             // Mark as clean - disable save button
             this.setDirty(false);
+            if (!silent) {
+                this.savedSVG = serialized;
+            }
         } catch (error) {
             if(error instanceof InternationalizedError) {
                 ErrorReporter.error(error);
@@ -190,8 +283,8 @@ export class PluginEditor {
                 ErrorReporter.error(new GenericSaveError());
                 console.error(error);
             }
-            await navigator.clipboard.writeText(svgElem.outerHTML);
-            console.log("Couldn't save SVG: ", svgElem.outerHTML)
+            await navigator.clipboard.writeText(serialized);
+            console.log("Couldn't save SVG: ", serialized)
             return;
         }
 
@@ -227,9 +320,27 @@ export class EditorManager {
                 try {
                     const editor = await PluginEditor.create(filename, p.config.options.editorOptions);
                     this.element.appendChild(editor.getElement());
+                    (this as any)._pluginEditor = editor;
                 }catch (error){
                     ErrorReporter.error(error);
                 }
+            },
+            beforeDestroy() {
+                const editor = (this as any)._pluginEditor as PluginEditor | undefined;
+                if (!editor?.getIsDirty()) return;
+
+                const oldSVG = editor.getSavedSVG();
+                const newSVG = editor.getCurrentSVG();
+
+                editor.autosave().catch(e => console.warn('Auto-save failed:', e));
+
+                confirmUnsavedChanges(p.i18n, oldSVG, newSVG)
+                    .then(async (action) => {
+                        if (action === 'discard') {
+                            await editor.restoreSavedVersion();
+                        }
+                    })
+                    .catch(e => console.warn('Rollback failed:', e));
             }
         });
     }
@@ -248,20 +359,42 @@ export class EditorManager {
         });
     }
 
-    toDialog() {
+    toDialog(p: DrawJSPlugin) {
+        const pluginEditor = this.editor;
+
+        pluginEditor.setOnClose(async () => {
+            if (!pluginEditor.getIsDirty()) {
+                dialog.destroy();
+                return;
+            }
+            const oldSVG = pluginEditor.getSavedSVG();
+            const newSVG = pluginEditor.getCurrentSVG();
+            try {
+                await pluginEditor.autosave();
+                const action = await confirmUnsavedChanges(p.i18n, oldSVG, newSVG);
+                if (action === 'discard') {
+                    await pluginEditor.restoreSavedVersion();
+                }
+            } catch (e) {
+                console.warn('Close handler failed:', e);
+            }
+            dialog.destroy();
+        });
+
         const dialog = new Dialog({
             width: "100vw",
             height: getFrontend() == "mobile" ? "100vh" : "90vh",
             content: `<div id="DrawingPanel" style="width:100%; height: 100%;"></div>`,
+            disableClose: true,
         });
-        dialog.element.querySelector("#DrawingPanel").appendChild(this.editor.getElement());
+        dialog.element.querySelector("#DrawingPanel").appendChild(pluginEditor.getElement());
     }
 
     open(p: DrawJSPlugin) {
         if(getFrontend() != "mobile" && !p.config.options.dialogOnDesktop) {
             this.toTab(p);
         } else {
-            this.toDialog();
+            this.toDialog(p);
         }
     }
 

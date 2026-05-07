@@ -7,14 +7,28 @@ This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan docu
 
 ## Usage instructions
 ![Demo](asset/demo.webp)
-- Install the plugin from the marketplace. You can find it by searching for `js-draw`. 
-- To add a new whiteboard to your document:
-  1. Type `/Insert whiteboard` in your document, and select the correct menu entry
-  2. The whiteboard editor will open in a new tab. Draw as you like, then click the Save button and close the tab.
-- To edit the whiteboard later:
-  1. Left-click or tap on the whiteboard to select it, then click on the Edit icon in the top bar or use the keyboard shortcut `Alt+Shift+D`
-     - Or right-click on the whiteboard (or click the three dots on mobile), select "Plugin" > "Edit whiteboard" in the menu
-  2. The editor tab will open, edit your file as you like, then click the Save button and close the tab.
+
+Install the plugin from the marketplace by searching for `js-draw`.
+
+### Creating a whiteboard
+
+There are two ways to create a new whiteboard:
+- **Slash command** — type `/Insert whiteboard` in your document and select the menu entry.
+- **Keyboard shortcut / toolbar icon** — press `Alt+Shift+D` or click the toolbar icon without selecting anything. A new whiteboard will be inserted at your cursor position.
+
+The editor will open in a new tab (or dialog on mobile). Draw what you like, then click **Save** and close the editor.
+
+### Editing a whiteboard
+
+Select an existing whiteboard by left-clicking it, then open the editor in one of these ways:
+- Press `Alt+Shift+D` or click the toolbar icon.
+- Right-click the whiteboard (or tap the three dots on mobile) and choose **Plugin → Edit whiteboard**.
+
+### Unsaved changes
+
+If you close the editor without saving, your changes are automatically preserved and you'll be given the option to keep or roll back to the previous version.
+
+Unsaved drawings are also automatically saved when the app exits. **Note:** this emergency save happens after SiYuan's final sync, so it may cause sync conflicts if you use SiYuan across multiple devices. Make a habit of saving manually before closing.
 
 ## Planned features
 Check out the [Projects](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/projects) tab!

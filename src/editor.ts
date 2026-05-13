@@ -87,7 +87,10 @@ export class PluginEditor {
 
     private readonly filename: string;
 
+    private keepEditorPosition: boolean;
     private isDirty: boolean = false;
+    private isMoved: boolean = false;
+
     private saveButton: BaseWidget | null = null;
     private toolbar: AbstractToolbar | null = null;
     private savedSVG: string | null = null;
@@ -141,12 +144,19 @@ export class PluginEditor {
 
     private setDirty(dirty: boolean): void {
         this.isDirty = dirty;
-        this.updateSaveButtonState();
+        this.updateSaveButtonState(!this.isDirty);
     }
 
-    private updateSaveButtonState(): void {
+    private setMoved(moved: boolean): void {
+        if(this.keepEditorPosition) {
+            this.isMoved = moved;
+            this.updateSaveButtonState(!this.isMoved);
+        }
+    }
+
+    private updateSaveButtonState(disabledCondition: boolean): void {
         if (this.saveButton) {
-            this.saveButton.setDisabled(!this.isDirty);
+            this.saveButton.setDisabled(disabledCondition);
         }
     }
 
@@ -193,6 +203,7 @@ export class PluginEditor {
         await this.drawingFile.loadFromSiYuanFS();
         const drawingContent = this.drawingFile.getContent();
         this.savedSVG = drawingContent;
+        this.keepEditorPosition = defaultEditorOptions.restorePosition;
 
         if(drawingContent != null) {
 
@@ -261,7 +272,7 @@ export class PluginEditor {
         this.editor.notifier.on(EditorEventType.CommandUndone, () => this.setDirty(true));
 
         // Viewport changes (pan/zoom) - saved in SVG's editorView attribute
-        this.editor.notifier.on(EditorEventType.ViewportChanged, () => this.setDirty(true));
+        this.editor.notifier.on(EditorEventType.ViewportChanged, () => this.setMoved(true));
     }
 
     private async saveCallback(silent: boolean = false) {
@@ -281,6 +292,7 @@ export class PluginEditor {
 
             // Mark as clean - disable save button
             this.setDirty(false);
+            this.setMoved(false);
             if (!silent) {
                 this.savedSVG = serialized;
             }

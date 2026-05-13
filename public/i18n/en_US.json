@@ -1,7 +1,7 @@
 {
   "insertWhiteboard": "Insert whiteboard",
   "editWhiteboard": "Edit whiteboard",
-  "editShortcut": "Edit selected or create new whiteboard",
+  "editShortcut": "Edit/create whiteboard",
   "errors": {
     "noFileID": "File ID missing - couldn't open file.",
     "notAWhiteboard": "You must select a whiteboard, not a regular image. <a href='https://s.boxo.cc/jsdraw-plugin-instructions'>Usage instructions</a>",

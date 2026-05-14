@@ -5,7 +5,7 @@ import {
     getMenuHTML,
     findImgSrc,
     imgSrcToFilename} from "@/helper";
-import {EditorManager, PluginEditor} from "@/editor";
+import {EditorManager} from "@/editor";
 import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
 import {ErrorReporter, MustSelectError, NotAWhiteboardError, MustOpenDocumentError} from "@/errors";
@@ -68,7 +68,7 @@ export default class DrawJSPlugin extends Plugin {
 
         this.eventBus.on("ws-main", (e: any) => {
             if (e.detail?.cmd === "exit") {
-                for (const editor of PluginEditor.getOpenEditors()) {
+                for (const editor of EditorManager.getOpenEditors()) {
                     if (editor.getIsDirty()) {
                         editor.autosave().catch(() => {});
                     }
@@ -117,6 +117,7 @@ export default class DrawJSPlugin extends Plugin {
             const activeWnd = document.querySelector(".layout__wnd--active");
             if (activeWnd && !activeWnd.contains(protyleElement)) return false;
         }
+        if (document.querySelector("#DrawingPanel")) return false; // editor dialog is open
         if (!(protyle as any).protyle?.toolbar?.range) return false;
         return true;
     }
@@ -133,7 +134,9 @@ export default class DrawJSPlugin extends Plugin {
             return this.shortcutCreate(protyle, action === 'ask');
         }
 
-        const imgSrc = findImgSrc(selectedImg[0] as HTMLElement);
+        const selectedImgEl = selectedImg[0] as HTMLElement;
+        selectedImgEl.classList.remove("img--select");
+        const imgSrc = findImgSrc(selectedImgEl);
         if(!imgSrc) {
             throw new NotAWhiteboardError();
         }

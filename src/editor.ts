@@ -23,7 +23,6 @@ import {
 
 type CloseAction = 'save' | 'discard';
 
-const openEditors: Set<PluginEditor> = new Set();
 
 function confirmUnsavedChanges(
     i18n: any,
@@ -102,10 +101,6 @@ export class PluginEditor {
     getFilename(): string { return this.filename; }
     getIsDirty(): boolean { return this.isDirty; }
     async autosave(): Promise<void> { await this.saveCallback(true); }
-
-    static getOpenEditors(): ReadonlySet<PluginEditor> { return openEditors; }
-
-    unregister(): void { openEditors.delete(this); }
 
     setOnClose(callback: () => void): void {
         if (this.toolbar) {
@@ -190,8 +185,6 @@ export class PluginEditor {
 
         await instance.restoreOrInitFile(defaultEditorOptions);
         await instance.genToolbar();
-
-        openEditors.add(instance);
 
         return instance;
 
@@ -314,6 +307,12 @@ export class PluginEditor {
 
 export class EditorManager {
 
+    private static readonly openEditors: Set<PluginEditor> = new Set();
+
+    static registerEditor(editor: PluginEditor): void { EditorManager.openEditors.add(editor); }
+    static unregisterEditor(editor: PluginEditor): void { EditorManager.openEditors.delete(editor); }
+    static getOpenEditors(): ReadonlySet<PluginEditor> { return EditorManager.openEditors; }
+
     private editor: PluginEditor
     setEditor(editor: PluginEditor) { this.editor = editor;}
 
@@ -322,6 +321,7 @@ export class EditorManager {
         try {
             let editor = await PluginEditor.create(filename, p.config.options.editorOptions);
             instance.setEditor(editor);
+            EditorManager.registerEditor(editor);
         }catch (error) {
             ErrorReporter.error(error);
         }
@@ -341,6 +341,7 @@ export class EditorManager {
                     const editor = await PluginEditor.create(filename, p.config.options.editorOptions);
                     this.element.appendChild(editor.getElement());
                     (this as any)._pluginEditor = editor;
+                    EditorManager.registerEditor(editor);
                 }catch (error){
                     ErrorReporter.error(error);
                 }
@@ -348,7 +349,7 @@ export class EditorManager {
             beforeDestroy() {
                 const editor = (this as any)._pluginEditor as PluginEditor | undefined;
                 if (!editor?.getIsDirty()) {
-                    editor?.unregister();
+                    if (editor) EditorManager.unregisterEditor(editor);
                     return;
                 }
 
@@ -364,7 +365,7 @@ export class EditorManager {
                         }
                     })
                     .catch(e => console.warn('Rollback failed:', e))
-                    .finally(() => editor.unregister());
+                    .finally(() => { if (editor) EditorManager.unregisterEditor(editor); });
             }
         });
     }
@@ -388,7 +389,7 @@ export class EditorManager {
 
         pluginEditor.setOnClose(async () => {
             if (!pluginEditor.getIsDirty()) {
-                pluginEditor.unregister();
+                EditorManager.unregisterEditor(pluginEditor);
                 dialog.destroy();
                 return;
             }
@@ -403,7 +404,7 @@ export class EditorManager {
             } catch (e) {
                 console.warn('Close handler failed:', e);
             }
-            pluginEditor.unregister();
+            EditorManager.unregisterEditor(pluginEditor);
             dialog.destroy();
         });
 

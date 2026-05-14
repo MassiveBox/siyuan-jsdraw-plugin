@@ -1,4 +1,4 @@
-import {Plugin, Protyle} from 'siyuan';
+import {getFrontend, Plugin, Protyle} from 'siyuan';
 import {
     getMarkdownBlock,
     loadIcons,
@@ -8,8 +8,7 @@ import {
 import {EditorManager, PluginEditor} from "@/editor";
 import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
-import {ErrorReporter, MustSelectError, NotAWhiteboardError, UninitializedProtyleError} from "@/errors";
-import { sql } from './api';
+import {ErrorReporter, MustSelectError, NotAWhiteboardError, MustOpenDocumentError} from "@/errors";
 import { confirmDialog } from '@/libs/dialog';
 import { setupRefreshListener, teardownRefreshListener } from '@/refresh';
 
@@ -29,8 +28,15 @@ export default class DrawJSPlugin extends Plugin {
         await this.startConfig();
         await this.startAnalytics();
 
+        // keep track of last active protyle, for edit/create shortcut
         this.eventBus.on("switch-protyle", (e: any) => {
             this.lastActiveProtyle = e.detail.protyle.getInstance();
+        });
+        this.eventBus.on("destroy-protyle", (e: any) => {
+            const destroyedProtyle = e.detail.protyle.getInstance();
+            if (this.lastActiveProtyle === destroyedProtyle) {
+                this.lastActiveProtyle = null;
+            }
         });
 
         this.protyleSlash = [{
@@ -73,18 +79,13 @@ export default class DrawJSPlugin extends Plugin {
         this.addCommand({
             langKey: "editShortcut",
             hotkey: "⌥⇧D",
-            callback: async () => {
-                this.shortcutEditSelectedOrCreate(this.lastActiveProtyle).catch(e => ErrorReporter.error(e, 5000));
-            },
+            callback: () => void this.handleEditShortcut(),
         })
 
         this.addTopBar({
             icon: "iconDraw",
             title: this.i18n.editShortcut,
-            callback: async () => {
-                await this.shortcutEditSelectedOrCreate(this.lastActiveProtyle || undefined)
-                    .catch(e => ErrorReporter.error(e, 5000));
-            },
+            callback: () => void this.handleEditShortcut(),
             position: "left"
         })
 
@@ -99,12 +100,33 @@ export default class DrawJSPlugin extends Plugin {
         void this.analytics.sendEvent("uninstall");
     }
 
+    private async handleEditShortcut() {
+        await this.shortcutEditSelectedOrCreate(this.lastActiveProtyle)
+            .catch(e => ErrorReporter.error(e, 5000));
+    }
+
+    private isProtyleActive(protyle?: Protyle): boolean {
+        if (!protyle) return false;
+        const protyleElement = (protyle as any).protyle?.element;
+        if (!protyleElement) return false;
+        if (!protyleElement.isConnected) return false;
+        if(getFrontend() != 'mobile' && getFrontend() != 'browser-mobile') {
+            // good indicator of whether the protyle is active from SiYuan source code
+            // https://github.com/siyuan-note/siyuan/blob/e1482b41418a777626c980157c8bb0a273a021eb/app/src/editor/util.ts#L561
+            if (protyleElement.closest(".fn__none")) return false;
+            const activeWnd = document.querySelector(".layout__wnd--active");
+            if (activeWnd && !activeWnd.contains(protyleElement)) return false;
+        }
+        if (!(protyle as any).protyle?.toolbar?.range) return false;
+        return true;
+    }
+
     private async shortcutEditSelectedOrCreate(protyle?: Protyle) {
 
         let selectedImg = document.getElementsByClassName('img--select');
         if(selectedImg.length == 0) { // create image
-            if (!protyle) {
-                throw new UninitializedProtyleError();
+            if (!this.isProtyleActive(protyle)) {
+                throw new MustOpenDocumentError();
             }
             const action = this.config.options.noSelectionAction;
             if (action === 'nothing') throw new MustSelectError();

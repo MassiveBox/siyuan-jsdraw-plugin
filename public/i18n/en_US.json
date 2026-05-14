@@ -12,7 +12,7 @@
     "unchangedProtyle": "Make sure the image you're trying to edit still exists in your documents.",
     "saveGeneric": "Error saving! The current drawing has been copied to your clipboard. You may need to create a new drawing and paste it there.",
     "mustSelect": "Select a whiteboard in your document by left-clicking it, then use this icon/shortcut to open the editor directly.  <a href='https://s.boxo.cc/jsdraw-plugin-instructions'>Usage instructions</a>",
-    "uninitializedProtyle": "No active document found. Please open and click inside a document first, then try again."
+    "mustOpenDocument": "No active document. You must select a document before using this shortcut."
   },
   "createConfirm": {
     "title": "Create Whiteboard",

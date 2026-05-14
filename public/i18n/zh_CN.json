@@ -12,7 +12,7 @@
     "unchangedProtyle": "请确保您尝试编辑的图片仍存在于文档中。",
     "saveGeneric": "保存出错！当前绘图已复制到剪贴板。您可能需要新建一个绘图并粘贴进去。",
     "mustSelect": "先在文档中左键点击选中白板，然后使用此图标/快捷键直接打开编辑器。<a href='https://s.boxo.cc/jsdraw-plugin-instructions-zh-cn'>使用说明</a>",
-    "uninitializedProtyle": "未找到活动文档。请先打开一个文档并点击其中，然后重试。"
+    "mustOpenDocument": "没有活动文档。使用此快捷键前必须选中一个文档。"
   },
   "createConfirm": {
     "title": "创建白板",

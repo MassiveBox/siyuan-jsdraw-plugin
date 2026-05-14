@@ -61,8 +61,8 @@ export class MustSelectError extends InternationalizedError {
     }
 }
 
-export class UninitializedProtyleError extends InternationalizedError {
+export class MustOpenDocumentError extends InternationalizedError {
     constructor() {
-        super('uninitializedProtyle');
+        super('mustOpenDocument');
     }
 }

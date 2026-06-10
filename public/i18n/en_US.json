@@ -78,6 +78,10 @@
         "onLight": "On light mode",
         "disabled": "Disabled"
       }
+    },
+    "additionalPens": {
+      "title": "Additional pens",
+      "description": "Number of additional pens (beyond the default 3) to show in the toolbar."
     }
   }
 }

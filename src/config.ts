@@ -6,6 +6,9 @@ import {getFirstDefined} from "@/helper";
 import {ErrorReporter, InvalidBackgroundColorError} from "@/errors";
 import { updateImageColorInversionStyle } from '@/theme';
 
+const DEFAULT_ADDITIONAL_PENS = 2;
+const MAX_ADDITIONAL_PENS = 7;
+
 export interface Options {
     dialogOnDesktop: boolean
     analytics: boolean
@@ -17,6 +20,7 @@ export interface EditorOptions {
     restorePosition: boolean;
     grid: boolean
     background: string
+    additionalPens: number
 }
 
 export class PluginConfig {
@@ -47,7 +51,8 @@ export class PluginConfig {
             editorOptions: {
                 restorePosition: getFirstDefined(jsonObj?.editorOptions?.restorePosition, jsonObj?.restorePosition,  true),
                 grid: getFirstDefined(jsonObj?.editorOptions?.grid, jsonObj?.grid, true),
-                background: getFirstDefined(jsonObj?.editorOptions?.background, jsonObj?.background, "#00000000")
+                background: getFirstDefined(jsonObj?.editorOptions?.background, jsonObj?.background, "#00000000"),
+                additionalPens: getFirstDefined(jsonObj?.editorOptions?.additionalPens, DEFAULT_ADDITIONAL_PENS)
             },
             imageColorInversion: getFirstDefined(jsonObj?.imageColorInversion, 'disabled'),
         };
@@ -94,6 +99,7 @@ export class PluginConfigViewer {
 
     private buildOptionsFromData(data: any): { options: Options, color: string } {
         const color = data.backgroundDropdown === "CUSTOM" ? data.background : data.backgroundDropdown;
+        const parsedAdditionalPens = parseInt(data.additionalPens);
         return {
             options: {
                 dialogOnDesktop: !!data.dialogOnDesktop,
@@ -105,6 +111,7 @@ export class PluginConfigViewer {
                         ? color
                         : this.config.options.editorOptions.background,
                     restorePosition: !!data.restorePosition,
+                    additionalPens: Math.max(0, Math.min(MAX_ADDITIONAL_PENS, isNaN(parsedAdditionalPens) ? DEFAULT_ADDITIONAL_PENS : parsedAdditionalPens))
                 },
                 imageColorInversion: data.imageColorInversion || 'disabled',
             },
@@ -167,6 +174,15 @@ export class PluginConfigViewer {
             description: this.plugin.i18n.settings.restorePosition.description,
             value: this.config.options.editorOptions.restorePosition,
             type: 'checkbox'
+        });
+
+        this.settingUtils.addItem({
+            key: "additionalPens",
+            title: this.plugin.i18n.settings.additionalPens.title,
+            description: this.plugin.i18n.settings.additionalPens.description,
+            value: this.config.options.editorOptions.additionalPens,
+            type: 'slider',
+            slider: { min: 0, max: MAX_ADDITIONAL_PENS, step: 1 }
         });
 
         this.settingUtils.addItem({

@@ -9,6 +9,7 @@ import Editor, {
     Color4,
     EditorEventType, getLocalizationTable,
     Mat33,
+    PenTool,
     Vec2,
     Viewport
 } from "js-draw";
@@ -23,6 +24,14 @@ import {
 } from "@/errors";
 
 type CloseAction = 'save' | 'discard';
+
+const ADDITIONAL_PEN_COLORS = [
+    Color4.red,
+    Color4.green,
+    Color4.purple,
+    Color4.orange,
+    Color4.yellow,
+];
 
 
 function confirmUnsavedChanges(
@@ -161,11 +170,18 @@ export class PluginEditor {
         this.filename = filename;
 
         this.element = document.createElement("div");
-        this.element.style.height = '100%';
         this.editor = new Editor(this.element, {
             localization: getLocalizationTable([window.siyuan.config.lang]),
             iconProvider: new MaterialIconProvider(),
         });
+
+    }
+
+    private initEditor(): void {
+
+        this.element.style.height = '100%';
+        this.editor.getRootElement().style.height = '100%';
+
         const themeCSS = getSiYuanThemeCSS();
         if (themeCSS) {
             this.editor.addStyleSheet(themeCSS);
@@ -180,19 +196,37 @@ export class PluginEditor {
         this.element.appendChild(styleElement);
 
         this.editor.dispatch(this.editor.setBackgroundStyle({ autoresize: true }), false);
-        this.editor.getRootElement().style.height = '100%';
+    
+    }
 
+    private setupAdditionalPens(count: number): void {
+        const pens: PenTool[] = [];
+        for (let i = 0; i < count; i++) {
+            pens.push(new PenTool(this.editor, `Pen ${i + 4}`, {
+                color: ADDITIONAL_PEN_COLORS[i % ADDITIONAL_PEN_COLORS.length],
+                thickness: 2,
+            }));
+        }
+        if (pens.length > 0) {
+            const primaryTools = this.editor.toolController.getPrimaryTools();
+            const defaultPens = primaryTools.filter(
+                (tool): tool is PenTool => tool instanceof PenTool && !pens.includes(tool as PenTool)
+            );
+            const lastDefaultPen = defaultPens[defaultPens.length - 1] ?? primaryTools[primaryTools.length - 1];
+            for (const pen of pens) {
+                this.editor.toolController.addPrimaryTool(pen);
+            }
+            this.editor.toolController.insertToolsAfter(lastDefaultPen, pens);
+        }
     }
 
     static async create(filename: string, defaultEditorOptions: EditorOptions): Promise<PluginEditor> {
-
         const instance = new PluginEditor(filename);
-
+        instance.initEditor();
+        instance.setupAdditionalPens(defaultEditorOptions.additionalPens ?? 2);
         await instance.restoreOrInitFile(defaultEditorOptions);
         await instance.genToolbar();
-
         return instance;
-
     }
 
     async restoreOrInitFile(defaultEditorOptions: EditorOptions) {

@@ -78,6 +78,10 @@
         "onLight": "在浅色模式下",
         "disabled": "已禁用"
       }
+    },
+    "additionalPens": {
+      "title": "额外画笔数量",
+      "description": "在工具栏中显示的额外画笔数量（超出默认的3支）。"
     }
   }
 }

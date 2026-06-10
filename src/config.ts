@@ -4,12 +4,14 @@ import {Plugin} from "siyuan";
 import {SettingUtils} from "@/libs/setting-utils";
 import {getFirstDefined} from "@/helper";
 import {ErrorReporter, InvalidBackgroundColorError} from "@/errors";
+import { updateImageColorInversionStyle } from '@/theme';
 
 export interface Options {
     dialogOnDesktop: boolean
     analytics: boolean
     noSelectionAction: 'ask' | 'create' | 'nothing'
     editorOptions: EditorOptions
+    imageColorInversion: 'on-dark' | 'on-light' | 'disabled'
 }
 export interface EditorOptions {
     restorePosition: boolean;
@@ -47,6 +49,7 @@ export class PluginConfig {
                 grid: getFirstDefined(jsonObj?.editorOptions?.grid, jsonObj?.grid, true),
                 background: getFirstDefined(jsonObj?.editorOptions?.background, jsonObj?.background, "#00000000")
             },
+            imageColorInversion: getFirstDefined(jsonObj?.imageColorInversion, 'disabled'),
         };
     }
 
@@ -102,7 +105,8 @@ export class PluginConfigViewer {
                         ? color
                         : this.config.options.editorOptions.background,
                     restorePosition: !!data.restorePosition,
-                }
+                },
+                imageColorInversion: data.imageColorInversion || 'disabled',
             },
             color
         };
@@ -118,6 +122,7 @@ export class PluginConfigViewer {
         }
         this.config.setConfig(options);
         await this.config.save();
+        updateImageColorInversionStyle(options.imageColorInversion);
     }
 
     populateSettingMenu() {
@@ -187,6 +192,19 @@ export class PluginConfigViewer {
                 callback: () => {
                     this.config.options.noSelectionAction = this.settingUtils.take('noSelectionAction', true) as Options['noSelectionAction'];
                 }
+            },
+        });
+
+        this.settingUtils.addItem({
+            key: "imageColorInversion",
+            title: this.plugin.i18n.settings.imageColorInversion.title,
+            description: this.plugin.i18n.settings.imageColorInversion.description,
+            type: 'select',
+            value: this.config.options.imageColorInversion,
+            options: {
+                'on-dark': this.plugin.i18n.settings.imageColorInversion.options.onDark,
+                'on-light': this.plugin.i18n.settings.imageColorInversion.options.onLight,
+                'disabled': this.plugin.i18n.settings.imageColorInversion.options.disabled,
             },
         });
 

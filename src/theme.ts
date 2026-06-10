@@ -34,3 +34,30 @@ export function getSiYuanThemeCSS(): string | null {
     const vars = isDark ? DARK_THEME : LIGHT_THEME;
     return `.imageEditorContainer { ${vars} }`;
 }
+
+export function updateImageColorInversionStyle(inversionMode: 'on-dark' | 'on-light' | 'disabled'): void {
+    const styleId = 'snippetCSS-jsdrawColorInversion';
+    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+    
+    if (inversionMode === 'disabled') {
+        if (styleElement) {
+            styleElement.remove();
+        }
+        return;
+    }
+    
+    if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = styleId;
+        document.head.appendChild(styleElement);
+    }
+    
+    const themeMode = inversionMode === 'on-dark' ? 'dark' : 'light';
+    const css = `
+        html[data-theme-mode="${themeMode}"] img[src^="assets/jsdraw-"] {
+            filter: invert(0.8) brightness(1.2);
+        }
+    `;
+    
+    styleElement.textContent = css;
+}

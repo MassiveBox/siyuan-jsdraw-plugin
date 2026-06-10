@@ -69,6 +69,15 @@
         "create": "自动创建",
         "nothing": "不执行任何操作"
       }
+    },
+    "imageColorInversion": {
+      "title": "应用图像颜色反转",
+      "description": "当思源笔记处于特定主题时反转白板颜色，使白板始终与您的思源笔记主题保持一致。",
+      "options": {
+        "onDark": "在深色模式下",
+        "onLight": "在浅色模式下",
+        "disabled": "已禁用"
+      }
     }
   }
 }

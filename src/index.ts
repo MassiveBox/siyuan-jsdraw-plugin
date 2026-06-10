@@ -11,6 +11,7 @@ import {Analytics} from "@/analytics";
 import {ErrorReporter, MustSelectError, NotAWhiteboardError, MustOpenDocumentError} from "@/errors";
 import { confirmDialog } from '@/libs/dialog';
 import { setupRefreshListener, teardownRefreshListener } from '@/refresh';
+import { updateImageColorInversionStyle } from '@/theme';
 
 export default class DrawJSPlugin extends Plugin {
 
@@ -174,6 +175,7 @@ export default class DrawJSPlugin extends Plugin {
         await this.config.load();
         let configViewer = new PluginConfigViewer(this.config, this);
         await configViewer.load();
+        updateImageColorInversionStyle(this.config.options.imageColorInversion);
     }
 
     private async startAnalytics() {

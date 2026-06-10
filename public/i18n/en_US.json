@@ -69,6 +69,15 @@
         "create": "Create automatically",
         "nothing": "Do nothing"
       }
+    },
+    "imageColorInversion": {
+      "title": "Apply image color inversion",
+      "description": "Invert whiteboard colors when SiYuan is on a specific theme, so that whiteboards are always consistent with your SiYuan theme.",
+      "options": {
+        "onDark": "On dark mode",
+        "onLight": "On light mode",
+        "disabled": "Disabled"
+      }
     }
   }
 }

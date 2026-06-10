@@ -15,6 +15,7 @@ import Editor, {
 import {Dialog, getFrontend, openTab, Plugin} from "siyuan";
 import DrawJSPlugin from "@/index";
 import {EditorOptions} from "@/config";
+import {getSiYuanThemeCSS} from "@/theme";
 import 'js-draw/styles';
 import {
     ErrorReporter,
@@ -165,6 +166,10 @@ export class PluginEditor {
             localization: getLocalizationTable([window.siyuan.config.lang]),
             iconProvider: new MaterialIconProvider(),
         });
+        const themeCSS = getSiYuanThemeCSS();
+        if (themeCSS) {
+            this.editor.addStyleSheet(themeCSS);
+        }
 
         const styleElement = document.createElement('style');
         styleElement.innerHTML = `

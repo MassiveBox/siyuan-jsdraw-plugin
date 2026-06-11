@@ -83,5 +83,25 @@
       "title": "Additional pens",
       "description": "Number of additional pens (beyond the default 3) to show in the toolbar."
     }
+  },
+  "stylusSettings": {
+    "title": "Stylus Settings",
+    "helpText": "Configure input stabilization and autocorrect parameters for all pens.",
+    "sectionStabilization": "Stabilization",
+    "sectionAutocorrect": "Autocorrect",
+    "sectionInput": "Input",
+    "ignoreTouch": "Ignore touch input",
+    "mass": "Mass (inertia)",
+    "springConstant": "Spring constant",
+    "friction": "Friction",
+    "maxPointDist": "Max point distance",
+    "inertiaFraction": "Inertia fraction",
+    "velocityDecay": "Velocity decay",
+    "finalizeThreshold": "Finalization threshold",
+    "holdTime": "Hold time (s)",
+    "autocorrectMaxSpeed": "Max speed (px/s)",
+    "autocorrectMaxRadius": "Radius (px)",
+    "resetDefaults": "Reset to defaults",
+    "moreSettings": "More settings are available in the plugin settings page."
   }
 }

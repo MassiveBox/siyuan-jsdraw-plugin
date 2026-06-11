@@ -83,5 +83,25 @@
       "title": "额外画笔数量",
       "description": "在工具栏中显示的额外画笔数量（超出默认的3支）。"
     }
+  },
+  "stylusSettings": {
+    "title": "手写笔设置",
+    "helpText": "为所有画笔配置输入稳定和自动校正参数。",
+    "sectionStabilization": "稳定",
+    "sectionAutocorrect": "自动校正",
+    "sectionInput": "输入",
+    "ignoreTouch": "忽略触摸输入",
+    "mass": "质量（惯性）",
+    "springConstant": "弹簧常数",
+    "friction": "摩擦系数",
+    "maxPointDist": "最大点距离",
+    "inertiaFraction": "惯性比例",
+    "velocityDecay": "速度衰减",
+    "finalizeThreshold": "终止阈值",
+    "holdTime": "停留时间（秒）",
+    "autocorrectMaxSpeed": "最大速度（像素/秒）",
+    "autocorrectMaxRadius": "半径（像素）",
+    "resetDefaults": "恢复默认值",
+    "moreSettings": "更多设置可在插件设置页面中找到。"
   }
 }

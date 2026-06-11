@@ -13,6 +13,7 @@ import Editor, {
     Vec2,
     Viewport
 } from "js-draw";
+import StylusSettingsWidget from "@/libs/StylusSettingsWidget";
 import {Dialog, getFrontend, openTab, Plugin} from "siyuan";
 import DrawJSPlugin from "@/index";
 import {EditorOptions} from "@/config";
@@ -220,12 +221,12 @@ export class PluginEditor {
         }
     }
 
-    static async create(filename: string, defaultEditorOptions: EditorOptions): Promise<PluginEditor> {
+    static async create(filename: string, defaultEditorOptions: EditorOptions, pluginI18n?: Record<string, any>): Promise<PluginEditor> {
         const instance = new PluginEditor(filename);
         instance.initEditor();
         instance.setupAdditionalPens(defaultEditorOptions.additionalPens ?? 2);
         await instance.restoreOrInitFile(defaultEditorOptions);
-        await instance.genToolbar();
+        await instance.genToolbar(pluginI18n);
         return instance;
     }
 
@@ -270,7 +271,7 @@ export class PluginEditor {
 
     }
 
-    async genToolbar() {
+    async genToolbar(pluginI18n?: Record<string, any>) {
 
         const toolbar = this.editor.addToolbar();
         this.toolbar = toolbar;
@@ -280,6 +281,10 @@ export class PluginEditor {
             await this.saveCallback();
         });
         this.saveButton.setDisabled(true); // Start with clean state
+
+        // stylus settings widget
+        const stylusSettings = new StylusSettingsWidget(this.editor, pluginI18n);
+        toolbar.addWidget(stylusSettings);
 
         // restore toolbarFile state
         this.toolbarFile = new PluginFile(STORAGE_PATH, TOOLBAR_FILENAME, JSON_MIME);
@@ -358,7 +363,7 @@ export class EditorManager {
     static async create(filename: string, p: DrawJSPlugin) {
         let instance = new EditorManager();
         try {
-            let editor = await PluginEditor.create(filename, p.config.options.editorOptions);
+            let editor = await PluginEditor.create(filename, p.config.options.editorOptions, p.i18n);
             instance.setEditor(editor);
             EditorManager.registerEditor(editor);
         }catch (error) {
@@ -377,7 +382,7 @@ export class EditorManager {
                     return;
                 }
                 try {
-                    const editor = await PluginEditor.create(filename, p.config.options.editorOptions);
+                    const editor = await PluginEditor.create(filename, p.config.options.editorOptions, p.i18n);
                     this.element.appendChild(editor.getElement());
                     (this as any)._pluginEditor = editor;
                     EditorManager.registerEditor(editor);

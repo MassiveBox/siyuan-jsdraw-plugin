@@ -4,8 +4,8 @@ import {
     isPointerEvt,
     Viewport,
 } from 'js-draw';
-import { Vec2 } from '@js-draw/math';
 import type { InputEvt, PointerEvt, GestureCancelEvt } from 'js-draw';
+import { Vec2 } from 'js-draw';
 import { InputStabilizerOptions, defaultStabilizerOptions } from './InputStabilizerOptions';
 
 const untilNextAnimationFrame = () =>

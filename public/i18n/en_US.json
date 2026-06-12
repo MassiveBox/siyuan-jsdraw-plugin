@@ -72,7 +72,7 @@
     },
     "imageColorInversion": {
       "title": "Apply image color inversion",
-      "description": "Invert whiteboard colors when SiYuan is on a specific theme, so that whiteboards are always consistent with your SiYuan theme.",
+      "description": "Invert whiteboard colors when SiYuan is on a specific theme, so that whiteboards are always consistent with your SiYuan theme.<br><b>Tip:</b> Set this value to \"On dark mode\", and set the \"Background color\" option to \"White\" (or \"Transparent\"). This way, the editor will operate in light mode, but the images will be inverted to fit the dark mode if enabled on SiYuan.",
       "options": {
         "onDark": "On dark mode",
         "onLight": "On light mode",

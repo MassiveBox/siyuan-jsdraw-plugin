@@ -53,9 +53,10 @@ export function updateImageColorInversionStyle(inversionMode: 'on-dark' | 'on-li
     }
     
     const themeMode = inversionMode === 'on-dark' ? 'dark' : 'light';
+    const invertFactor = inversionMode === 'on-dark' ? 88.1 : 100;
     const css = `
         html[data-theme-mode="${themeMode}"] img[src^="assets/jsdraw-"] {
-            filter: invert(0.8) brightness(1.2);
+            filter: grayscale(0%) invert(${invertFactor}%) contrast(100%) brightness(100%) hue-rotate(180deg);
         }
     `;
     

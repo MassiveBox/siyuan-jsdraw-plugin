@@ -51,10 +51,10 @@ export class PluginConfig {
             editorOptions: {
                 restorePosition: getFirstDefined(jsonObj?.editorOptions?.restorePosition, jsonObj?.restorePosition,  true),
                 grid: getFirstDefined(jsonObj?.editorOptions?.grid, jsonObj?.grid, true),
-                background: getFirstDefined(jsonObj?.editorOptions?.background, jsonObj?.background, "#00000000"),
+                background: getFirstDefined(jsonObj?.editorOptions?.background, jsonObj?.background, "#ffffff"),
                 additionalPens: getFirstDefined(jsonObj?.editorOptions?.additionalPens, DEFAULT_ADDITIONAL_PENS)
             },
-            imageColorInversion: getFirstDefined(jsonObj?.imageColorInversion, 'disabled'),
+            imageColorInversion: getFirstDefined(jsonObj?.imageColorInversion, 'on-dark'),
         };
     }
 
@@ -68,7 +68,7 @@ export class PluginConfig {
     }
 
     static validateColor(hex: string) {
-        hex = hex.replace('#', '');
+        hex = hex?.replace('#', '');
         return typeof hex === 'string'
             && (hex.length === 6 || hex.length === 8)
             && !isNaN(Number('0x' + hex))
@@ -104,7 +104,7 @@ export class PluginConfigViewer {
             options: {
                 dialogOnDesktop: !!data.dialogOnDesktop,
                 analytics: !!data.analytics,
-                noSelectionAction: data.noSelectionAction || 'ask',
+                noSelectionAction: data.noSelectionAction,
                 editorOptions: {
                     grid: !!data.grid,
                     background: PluginConfig.validateColor(color)
@@ -113,7 +113,7 @@ export class PluginConfigViewer {
                     restorePosition: !!data.restorePosition,
                     additionalPens: Math.max(0, Math.min(MAX_ADDITIONAL_PENS, isNaN(parsedAdditionalPens) ? DEFAULT_ADDITIONAL_PENS : parsedAdditionalPens))
                 },
-                imageColorInversion: data.imageColorInversion || 'disabled',
+                imageColorInversion: data.imageColorInversion,
             },
             color
         };
@@ -236,8 +236,10 @@ export class PluginConfigViewer {
 
     async load() {
         const data = await this.settingUtils.load();
-        const { options } = this.buildOptionsFromData(data);
-        this.config.setConfig(options);
+        if (data) {
+            const { options } = this.buildOptionsFromData(data);
+            this.config.setConfig(options);
+        }
         return data;
     }
 

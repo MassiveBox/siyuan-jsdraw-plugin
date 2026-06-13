@@ -5,7 +5,7 @@ import {
     getMenuHTML,
     findImgSrc,
     imgSrcToFilename} from "@/helper";
-import {EditorManager} from "@/editor";
+import {EditorManager, hasOpenEditors} from "@/editor-manager";
 import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
 import {ErrorReporter, MustSelectError, NotAWhiteboardError, MustOpenDocumentError} from "@/errors";
@@ -68,15 +68,10 @@ export default class DrawJSPlugin extends Plugin {
         })
 
         this.eventBus.on("ws-main", (e: any) => {
-            if (e.detail?.cmd === "exit") {
-                for (const editor of EditorManager.getOpenEditors()) {
-                    editor.flushSave().catch(() => {});
-                }
-            }
             if (e.detail?.cmd === "reloadPlugin") {
                 const dataChangePlugins: string[] = e.detail?.data?.dataChangePlugins ?? [];
                 if (dataChangePlugins.includes("siyuan-jsdraw-plugin")) {
-                    if (EditorManager.getOpenEditors().size > 0) {
+                    if (hasOpenEditors()) {
                         window.location.reload();
                     } else {
                         refreshAllSVGImages();

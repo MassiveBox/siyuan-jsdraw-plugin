@@ -14,14 +14,12 @@ import Editor, {
     Viewport
 } from "js-draw";
 import StylusSettingsWidget from "@/libs/StylusSettingsWidget";
-import {Dialog, getFrontend, openTab, Plugin} from "siyuan";
-import DrawJSPlugin from "@/index";
 import {EditorOptions} from "@/config";
 import {getSiYuanThemeCSS} from "@/theme";
 import 'js-draw/styles';
 import {
     ErrorReporter,
-    GenericSaveError, InternationalizedError, NoFilenameError
+    GenericSaveError, InternationalizedError
 } from "@/errors";
 
 const ADDITIONAL_PEN_COLORS = [
@@ -44,7 +42,7 @@ export class PluginEditor {
 
 
     private saveTimer: ReturnType<typeof setTimeout> | null = null;
-    private static readonly AUTOSAVE_DELAY_MS = 1000;
+    private static readonly AUTOSAVE_DELAY_MS = 500;
 
     private toolbar: AbstractToolbar | null = null;
 
@@ -53,14 +51,6 @@ export class PluginEditor {
     getElement(): HTMLElement { return this.element; }
     getEditor(): Editor { return this.editor; }
     getFilename(): string { return this.filename; }
-
-    async flushSave(): Promise<void> {
-        if (this.saveTimer) {
-            clearTimeout(this.saveTimer);
-            this.saveTimer = null;
-            await this.save();
-        }
-    }
 
     setOnClose(callback: () => void): void {
         if (this.toolbar) {
@@ -253,99 +243,6 @@ export class PluginEditor {
             return;
         }
 
-    }
-
-}
-
-export class EditorManager {
-
-    private static readonly openEditors: Set<PluginEditor> = new Set();
-
-    static registerEditor(editor: PluginEditor): void { EditorManager.openEditors.add(editor); }
-    static unregisterEditor(editor: PluginEditor): void { EditorManager.openEditors.delete(editor); }
-    static getOpenEditors(): ReadonlySet<PluginEditor> { return EditorManager.openEditors; }
-
-    private editor: PluginEditor
-    setEditor(editor: PluginEditor) { this.editor = editor;}
-
-    static async create(filename: string, p: DrawJSPlugin) {
-        let instance = new EditorManager();
-        try {
-            let editor = await PluginEditor.create(filename, p.config.options.editorOptions, p.i18n);
-            instance.setEditor(editor);
-            EditorManager.registerEditor(editor);
-        }catch (error) {
-            ErrorReporter.error(error);
-        }
-        return instance;
-    }
-
-    static registerTab(p: DrawJSPlugin) {
-        p.addTab({
-            'type': "whiteboard",
-            async init() {
-                const filename = this.data.filename;
-                if (filename == null) {
-                    ErrorReporter.error(new NoFilenameError());
-                    return;
-                }
-                try {
-                    const editor = await PluginEditor.create(filename, p.config.options.editorOptions, p.i18n);
-                    this.element.appendChild(editor.getElement());
-                    (this as any)._pluginEditor = editor;
-                    EditorManager.registerEditor(editor);
-                }catch (error){
-                    ErrorReporter.error(error);
-                }
-            },
-            beforeDestroy() {
-                const editor = (this as any)._pluginEditor as PluginEditor | undefined;
-                if (editor) {
-                    editor.flushSave().catch(e => console.warn('Flush save failed:', e));
-                    EditorManager.unregisterEditor(editor);
-                }
-            }
-        });
-    }
-
-    toTab(p: Plugin) {
-        openTab({
-            app: p.app,
-            custom: {
-                title: p.i18n.whiteboard,
-                icon: 'iconDraw',
-                id: "siyuan-jsdraw-pluginwhiteboard",
-                data: {
-                    filename: this.editor.getFilename(),
-                }
-            }
-        });
-    }
-
-    toDialog(p: DrawJSPlugin) {
-        const pluginEditor = this.editor;
-
-        pluginEditor.setOnClose(async () => {
-            await pluginEditor.flushSave();
-            EditorManager.unregisterEditor(pluginEditor);
-            dialog.destroy();
-        });
-
-        const dialog = new Dialog({
-            width: "100vw",
-            height: getFrontend() == "mobile" ? "100vh" : "90vh",
-            content: `<div id="DrawingPanel" style="width:100%; height: 100%;"></div>`,
-            disableClose: true,
-        });
-        dialog.element.querySelector("#DrawingPanel").appendChild(pluginEditor.getElement());
-    }
-
-    open(p: DrawJSPlugin) {
-        if(getFrontend() != "mobile" && !p.config.options.dialogOnDesktop) {
-            this.toTab(p);
-        } else {
-            this.toDialog(p);
-        }
     }
 
 }

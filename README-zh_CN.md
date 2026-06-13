@@ -2,6 +2,19 @@
 
 本插件可在思源笔记的任意位置内嵌 js-draw 白板。
 
+▶️ [LiuYun 帖子](https://liuyun.io/article/1770978310553)
+
+## 功能
+
+- **手写笔支持**：完整的手写笔支持，具备压力灵敏度。
+- **明暗模式**：在明/暗模式下绘图，绘图会自动适配思源笔记主题。
+- **自动保存**：绘图时自动保存。
+- **多设备优化**：在一台设备上编辑，通过自动刷新同步到其他设备。
+- **完全可定制**：插件设置页面提供所有需要的选项。
+- **更多功能**：[js-draw](https://github.com/personalizedrefrigerator/js-draw) 的所有功能均可使用。
+
+计划功能请查看 [Projects](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/projects) 标签页！
+
 ## 使用说明
 ![演示](asset/demo.webp)
 
@@ -27,12 +40,9 @@
 
 应用退出时也会自动保存未保存的绘图。**注意：** 此紧急保存发生在思源笔记最终同步之后，因此在多设备使用场景下可能导致同步冲突。请养成手动保存后再关闭的习惯。
 
-## 计划功能
-查看 [Projects](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/projects) 标签页了解详情！
-
 ## 贡献
 欢迎任何形式的贡献！  
-中文翻译由 Kimi AI 完成，因我不懂中文，如有疏漏欢迎指出。  
+中文翻译由 AI 完成，因我不懂中文，如有疏漏欢迎指出。  
 若您愿意协助，请 [提交 Issue](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/issues) 或 [联系我](mailto:box@boxo.cc)。
 
 ## 致谢

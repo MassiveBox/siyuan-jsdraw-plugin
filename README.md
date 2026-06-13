@@ -5,6 +5,17 @@ This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan docu
 
 ▶️ [LiuYun thread](https://liuyun.io/article/1770978310553)
 
+## Features
+
+- **Stylus support**: full stylus support, with pressure sensitivity.
+- **Light/dark mode**: draw in light or dark mode, and have your drawings automatically adapt to your SiYuan theme.
+- **Auto-save**: your drawing is saved automatically as you draw.
+- **Optimized for multi-device**: edit on a device and sync to others with auto-refresh.
+- **Fully customizable**: all the options you need in the plugin settings page.
+- **And much more**: all the features of [js-draw](https://github.com/personalizedrefrigerator/js-draw) are available.
+
+For the planned features, check out the [Projects](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/projects) tab!
+
 ## Usage instructions
 ![Demo](asset/demo.webp)
 
@@ -24,18 +35,9 @@ Select an existing whiteboard by left-clicking it, then open the editor in one o
 - Press `Alt+Shift+D` or click the toolbar icon.
 - Right-click the whiteboard (or tap the three dots on mobile) and choose **Plugin → Edit whiteboard**.
 
-### Unsaved changes
-
-If you close the editor without saving, your changes are automatically preserved and you'll be given the option to keep or roll back to the previous version.
-
-Unsaved drawings are also automatically saved when the app exits. **Note:** this emergency save happens after SiYuan's final sync, so it may cause sync conflicts if you use SiYuan across multiple devices. Make a habit of saving manually before closing.
-
-## Planned features
-Check out the [Projects](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/projects) tab!
-
 ## Contributing
 Contributions are always welcome!  
-The Chinese translation is made by Kimi AI, and I'm unable to verify it because I don't speak Chinese. If you do and find issues, please let me know.  
+The Chinese translation is made by AI, and I'm unable to thorougly verify it because I don't speak Chinese. If you do and find issues, please let me know.  
 Please [open an issue](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/issues) or [contact me](mailto:box@boxo.cc) if you'd like to help!
 
 ## Thanks to

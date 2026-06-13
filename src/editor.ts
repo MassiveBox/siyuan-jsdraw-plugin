@@ -2,6 +2,7 @@ import {MaterialIconProvider} from "@js-draw/material-icons";
 import {PluginAsset, PluginFile} from "@/file";
 import {JSON_MIME, STORAGE_PATH, SVG_MIME, TOOLBAR_FILENAME} from "@/const";
 import {refreshImagesForFile} from "@/refresh";
+import {bumpSyncMarker} from "@/sync";
 import Editor, {
     AbstractToolbar,
     BackgroundComponentBackgroundType,
@@ -325,6 +326,12 @@ export class PluginEditor {
                 refreshImagesForFile(this.filename);
             } catch (refreshError) {
                 console.warn('Image refresh failed, but save succeeded:', refreshError);
+            }
+
+            try {
+                await bumpSyncMarker();
+            } catch (syncError) {
+                console.warn('Sync marker update failed, but save succeeded:', syncError);
             }
 
             // Mark as clean - disable save button

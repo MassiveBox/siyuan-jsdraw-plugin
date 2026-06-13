@@ -5,5 +5,6 @@ export const ASSETS_PATH = "assets/";
 export const STORAGE_PATH = "/data/storage/petal/siyuan-jsdraw-plugin/";
 export const TOOLBAR_FILENAME = "toolbar.json";
 export const CONFIG_FILENAME = "conf.json";
+export const SYNC_MARKER_FILENAME = "sync-marker.json";
 export const EMBED_PATH = "/plugins/siyuan-jsdraw-plugin/webapp/?path=";
 export const DUMMY_HOST = "https://dummy.host/";

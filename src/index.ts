@@ -10,7 +10,7 @@ import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
 import {ErrorReporter, MustSelectError, NotAWhiteboardError, MustOpenDocumentError} from "@/errors";
 import { confirmDialog } from '@/libs/dialog';
-import { setupRefreshListener, teardownRefreshListener } from '@/refresh';
+import { setupRefreshListener, teardownRefreshListener, refreshAllSVGImages } from '@/refresh';
 import { updateImageColorInversionStyle } from '@/theme';
 
 export default class DrawJSPlugin extends Plugin {
@@ -72,6 +72,16 @@ export default class DrawJSPlugin extends Plugin {
                 for (const editor of EditorManager.getOpenEditors()) {
                     if (editor.getIsDirty()) {
                         editor.autosave().catch(() => {});
+                    }
+                }
+            }
+            if (e.detail?.cmd === "reloadPlugin") {
+                const dataChangePlugins: string[] = e.detail?.data?.dataChangePlugins ?? [];
+                if (dataChangePlugins.includes("siyuan-jsdraw-plugin")) {
+                    if (EditorManager.getOpenEditors().size > 0) {
+                        window.location.reload();
+                    } else {
+                        refreshAllSVGImages();
                     }
                 }
             }

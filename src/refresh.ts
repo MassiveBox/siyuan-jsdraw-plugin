@@ -4,6 +4,27 @@ const BROADCAST_CHANNEL_NAME = 'jsdraw-image-refresh';
 let channel: BroadcastChannel | null = null;
 
 /**
+ * Fetch each image with cache:'reload' to bypass the SiYuan cache, then reset
+ * its src so SiYuan re-reads the fresh content from disk.
+ */
+function bustCacheForImages(images: HTMLImageElement[]): void {
+    for (const img of images) {
+        const imageURL = img.src;
+        if (!imageURL) continue;
+
+        fetch(imageURL, { cache: 'reload' })
+            .then(() => {
+                const url = new URL(imageURL);
+                const relativePath = url.pathname.split('/assets/').pop() || '';
+                img.src = relativePath ? `assets/${relativePath}` : imageURL;
+            })
+            .catch((e) => {
+                console.warn(`Failed to refresh image: ${e}`);
+            });
+    }
+}
+
+/**
  * Find all img elements in the DOM that reference a specific asset file
  */
 function findImagesByFilename(filename: string): HTMLImageElement[] {
@@ -23,9 +44,8 @@ function findImagesByFilename(filename: string): HTMLImageElement[] {
 }
 
 /**
- * Refresh all images in the document that reference the specified file
- * Uses fetch with cache:'reload' to bypass browser cache, then resets img src
- * Uses broadcast channel to notify other windows to refresh the image
+ * Refresh all images in the open documents that reference the specified file.
+ * Uses broadcast channel to notify other windows to refresh the image.
  *
  * @param filename - The asset filename (e.g., "jsdraw-abc123.svg")
  * @param isBroadcast - Whether this is a broadcast message (to avoid infinite loops)
@@ -33,24 +53,7 @@ function findImagesByFilename(filename: string): HTMLImageElement[] {
  */
 export function refreshImagesForFile(filename: string, isBroadcast: boolean = false): number {
     const images = findImagesByFilename(filename);
-
-    for (const img of images) {
-        const imageURL = img.src;
-        if (!imageURL) continue;
-
-        // Fetch with cache:'reload' to update browser cache with fresh version
-        fetch(imageURL, { cache: 'reload' })
-            .then(() => {
-                // Reset src to trigger reload with fresh cached content
-                // Use relative path (assets/filename.svg) instead of full URL
-                const url = new URL(imageURL);
-                const relativePath = url.pathname.split('/assets/').pop() || '';
-                img.src = relativePath ? `assets/${relativePath}` : imageURL;
-            })
-            .catch((e) => {
-                console.warn(`Failed to refresh image: ${e}`);
-            });
-    }
+    bustCacheForImages(images);
 
     if (!isBroadcast) { // if this is the original call, broadcast to other windows
         try {
@@ -63,6 +66,16 @@ export function refreshImagesForFile(filename: string, isBroadcast: boolean = fa
         }
     }
 
+    return images.length;
+}
+
+/**
+ * Refresh every SVG image in the open documents.
+ * This is used to refresh all whiteboards
+ */
+export function refreshAllSVGImages(): number {
+    const images = Array.from(document.querySelectorAll('img[src$=".svg"]')) as HTMLImageElement[];
+    bustCacheForImages(images);
     return images.length;
 }
 

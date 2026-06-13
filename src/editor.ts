@@ -6,7 +6,6 @@ import {bumpSyncMarker} from "@/sync";
 import Editor, {
     AbstractToolbar,
     BackgroundComponentBackgroundType,
-    BaseWidget,
     Color4,
     EditorEventType, getLocalizationTable,
     Mat33,
@@ -25,8 +24,6 @@ import {
     GenericSaveError, InternationalizedError, NoFilenameError
 } from "@/errors";
 
-type CloseAction = 'save' | 'discard';
-
 const ADDITIONAL_PEN_COLORS = [
     Color4.red,
     Color4.green,
@@ -34,59 +31,6 @@ const ADDITIONAL_PEN_COLORS = [
     Color4.orange,
     Color4.yellow,
 ];
-
-
-function confirmUnsavedChanges(
-    i18n: any,
-    oldSVG: string | null,
-    newSVG: string
-): Promise<CloseAction> {
-    const oldPreview = oldSVG
-        ? `<div style="flex:1; text-align:center;">
-            <div style="font-weight:bold; margin-bottom:4px;">${i18n.unsavedConfirm.oldVersion}</div>
-            <div style="border:1px solid var(--b3-border-color); border-radius:4px; overflow:hidden; background:var(--b3-theme-background); padding:4px;">
-                <img src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(oldSVG)}" style="width:100%; height:auto; max-height:200px; object-fit:contain;" />
-            </div>
-        </div>`
-        : '';
-    const newPreview = `<div style="flex:1; text-align:center;">
-        <div style="font-weight:bold; margin-bottom:4px;">${i18n.unsavedConfirm.autoSavedVersion}</div>
-        <div style="border:1px solid var(--b3-border-color); border-radius:4px; overflow:hidden; background:var(--b3-theme-background); padding:4px;">
-            <img src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(newSVG)}" style="width:100%; height:auto; max-height:200px; object-fit:contain;" />
-        </div>
-    </div>`;
-
-    return new Promise((resolve) => {
-        let resolved = false;
-        const dialog = new Dialog({
-            title: i18n.unsavedConfirm.title,
-            content: `<div class="b3-dialog__content">
-    <div class="ft__breakword">${i18n.unsavedConfirm.message}</div>
-    <div style="display:flex; gap:8px; margin-top:8px;">
-        ${oldPreview}${newPreview}
-    </div>
-</div>
-<div class="b3-dialog__action">
-    <button class="b3-button b3-button--error" data-action="discard">${i18n.unsavedConfirm.discard}</button><div class="fn__space"></div>
-    <button class="b3-button b3-button--success" data-action="save">${i18n.unsavedConfirm.save}</button>
-</div>`,
-            width: "640px",
-            destroyCallback: () => {
-                if (!resolved) resolve('save');
-            },
-        });
-
-        const buttons = dialog.element.querySelectorAll(".b3-button");
-        buttons.forEach((btn) => {
-            btn.addEventListener("click", () => {
-                const action = (btn as HTMLElement).getAttribute("data-action") as CloseAction;
-                resolved = true;
-                dialog.destroy();
-                resolve(action);
-            });
-        });
-    });
-}
 
 export class PluginEditor {
 
@@ -98,21 +42,25 @@ export class PluginEditor {
 
     private readonly filename: string;
 
-    private keepEditorPosition: boolean;
-    private isDirty: boolean = false;
-    private isMoved: boolean = false;
 
-    private saveButton: BaseWidget | null = null;
+    private saveTimer: ReturnType<typeof setTimeout> | null = null;
+    private static readonly AUTOSAVE_DELAY_MS = 1000;
+
     private toolbar: AbstractToolbar | null = null;
-    private savedSVG: string | null = null;
 
     private static readonly viewParam: string = 'editorview';
 
     getElement(): HTMLElement { return this.element; }
     getEditor(): Editor { return this.editor; }
     getFilename(): string { return this.filename; }
-    getIsDirty(): boolean { return this.isDirty; }
-    async autosave(): Promise<void> { await this.saveCallback(true); }
+
+    async flushSave(): Promise<void> {
+        if (this.saveTimer) {
+            clearTimeout(this.saveTimer);
+            this.saveTimer = null;
+            await this.save();
+        }
+    }
 
     setOnClose(callback: () => void): void {
         if (this.toolbar) {
@@ -120,20 +68,12 @@ export class PluginEditor {
         }
     }
 
-    getSavedSVG(): string | null {
-        return this.savedSVG;
-    }
-
-    async restoreSavedVersion(): Promise<void> {
-        if (this.savedSVG != null) {
-            this.drawingFile.setContent(this.savedSVG);
-            await this.drawingFile.save();
-            try { refreshImagesForFile(this.filename); } catch (e) { console.warn(e); }
-        }
-    }
-
-    getCurrentSVG(): string {
-        return this.serializeSVGWithViewport();
+    private scheduleSave(): void {
+        if (this.saveTimer) clearTimeout(this.saveTimer);
+        this.saveTimer = setTimeout(() => {
+            this.saveTimer = null;
+            this.save().catch(e => console.warn('Auto-save failed:', e));
+        }, PluginEditor.AUTOSAVE_DELAY_MS);
     }
 
     private serializeSVGWithViewport(): string {
@@ -147,24 +87,6 @@ export class PluginEditor {
         });
         svgElem.setAttribute(PluginEditor.viewParam, `${rect.x} ${rect.y} ${zoom}`);
         return svgElem.outerHTML;
-    }
-
-    private setDirty(dirty: boolean): void {
-        this.isDirty = dirty;
-        this.updateSaveButtonState(!this.isDirty);
-    }
-
-    private setMoved(moved: boolean): void {
-        if(this.keepEditorPosition) {
-            this.isMoved = moved;
-            this.updateSaveButtonState(!this.isMoved);
-        }
-    }
-
-    private updateSaveButtonState(disabledCondition: boolean): void {
-        if (this.saveButton) {
-            this.saveButton.setDisabled(disabledCondition);
-        }
     }
 
     private constructor(filename: string) {
@@ -236,8 +158,6 @@ export class PluginEditor {
         this.drawingFile = new PluginAsset(this.filename, SVG_MIME);
         await this.drawingFile.loadFromSiYuanFS();
         const drawingContent = this.drawingFile.getContent();
-        this.savedSVG = drawingContent;
-        this.keepEditorPosition = defaultEditorOptions.restorePosition;
 
         if(drawingContent != null) {
 
@@ -266,22 +186,12 @@ export class PluginEditor {
             }));
         }
 
-        if (this.savedSVG == null) {
-            this.savedSVG = this.serializeSVGWithViewport();
-        }
-
     }
 
     async genToolbar(pluginI18n?: Record<string, any>) {
 
         const toolbar = this.editor.addToolbar();
         this.toolbar = toolbar;
-
-        // save button - store reference and initialize as disabled
-        this.saveButton = toolbar.addSaveButton(async () => {
-            await this.saveCallback();
-        });
-        this.saveButton.setDisabled(true); // Start with clean state
 
         // stylus settings widget
         const stylusSettings = new StylusSettingsWidget(this.editor, pluginI18n);
@@ -306,22 +216,20 @@ export class PluginEditor {
 
     private setupChangeListeners(): void {
         // Content changes (drawing, adding objects, etc.)
-        this.editor.notifier.on(EditorEventType.CommandDone, () => this.setDirty(true));
-        this.editor.notifier.on(EditorEventType.CommandUndone, () => this.setDirty(true));
-
+        this.editor.notifier.on(EditorEventType.CommandDone, () => this.scheduleSave());
+        this.editor.notifier.on(EditorEventType.CommandUndone, () => this.scheduleSave());
+        
         // Viewport changes (pan/zoom) - saved in SVG's editorView attribute
-        this.editor.notifier.on(EditorEventType.ViewportChanged, () => this.setMoved(true));
+        this.editor.notifier.on(EditorEventType.ViewportChanged, () => this.scheduleSave());
     }
 
-    private async saveCallback(silent: boolean = false) {
-
+    private async save() {
         const serialized = this.serializeSVGWithViewport();
 
         try {
             this.drawingFile.setContent(serialized);
             await this.drawingFile.save();
 
-            // Force refresh all images referencing this file
             try {
                 refreshImagesForFile(this.filename);
             } catch (refreshError) {
@@ -332,13 +240,6 @@ export class PluginEditor {
                 await bumpSyncMarker();
             } catch (syncError) {
                 console.warn('Sync marker update failed, but save succeeded:', syncError);
-            }
-
-            // Mark as clean - disable save button
-            this.setDirty(false);
-            this.setMoved(false);
-            if (!silent) {
-                this.savedSVG = serialized;
             }
         } catch (error) {
             if(error instanceof InternationalizedError) {
@@ -399,24 +300,10 @@ export class EditorManager {
             },
             beforeDestroy() {
                 const editor = (this as any)._pluginEditor as PluginEditor | undefined;
-                if (!editor?.getIsDirty()) {
-                    if (editor) EditorManager.unregisterEditor(editor);
-                    return;
+                if (editor) {
+                    editor.flushSave().catch(e => console.warn('Flush save failed:', e));
+                    EditorManager.unregisterEditor(editor);
                 }
-
-                const oldSVG = editor.getSavedSVG();
-                const newSVG = editor.getCurrentSVG();
-
-                editor.autosave().catch(e => console.warn('Auto-save failed:', e));
-
-                confirmUnsavedChanges(p.i18n, oldSVG, newSVG)
-                    .then(async (action) => {
-                        if (action === 'discard') {
-                            await editor.restoreSavedVersion();
-                        }
-                    })
-                    .catch(e => console.warn('Rollback failed:', e))
-                    .finally(() => { if (editor) EditorManager.unregisterEditor(editor); });
             }
         });
     }
@@ -439,22 +326,7 @@ export class EditorManager {
         const pluginEditor = this.editor;
 
         pluginEditor.setOnClose(async () => {
-            if (!pluginEditor.getIsDirty()) {
-                EditorManager.unregisterEditor(pluginEditor);
-                dialog.destroy();
-                return;
-            }
-            const oldSVG = pluginEditor.getSavedSVG();
-            const newSVG = pluginEditor.getCurrentSVG();
-            try {
-                await pluginEditor.autosave();
-                const action = await confirmUnsavedChanges(p.i18n, oldSVG, newSVG);
-                if (action === 'discard') {
-                    await pluginEditor.restoreSavedVersion();
-                }
-            } catch (e) {
-                console.warn('Close handler failed:', e);
-            }
+            await pluginEditor.flushSave();
             EditorManager.unregisterEditor(pluginEditor);
             dialog.destroy();
         });

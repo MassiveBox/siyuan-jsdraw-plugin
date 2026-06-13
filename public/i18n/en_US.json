@@ -18,14 +18,6 @@
     "title": "Create Whiteboard",
     "message": "No whiteboard is selected, so a new one will be created at the current cursor position. Proceed?<br>You can select a whiteboard by left-clicking it before triggering the shortcut.<br>You can also change the default behavior in the plugin settings."
   },
-  "unsavedConfirm": {
-    "title": "Unsaved Changes",
-    "message": "You closed an editor with pending changes, so they were automatically saved. Do you wish to roll them back?",
-    "save": "Keep the new version",
-    "discard": "Roll back",
-    "oldVersion": "Old version",
-    "autoSavedVersion": "Auto-saved version"
-  },
   "whiteboard": "Whiteboard",
   "settings": {
     "name": "js-draw Plugin Settings",

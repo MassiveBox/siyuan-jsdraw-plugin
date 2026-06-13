@@ -70,9 +70,7 @@ export default class DrawJSPlugin extends Plugin {
         this.eventBus.on("ws-main", (e: any) => {
             if (e.detail?.cmd === "exit") {
                 for (const editor of EditorManager.getOpenEditors()) {
-                    if (editor.getIsDirty()) {
-                        editor.autosave().catch(() => {});
-                    }
+                    editor.flushSave().catch(() => {});
                 }
             }
             if (e.detail?.cmd === "reloadPlugin") {

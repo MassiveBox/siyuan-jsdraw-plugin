@@ -18,14 +18,6 @@
     "title": "创建白板",
     "message": "未选中白板，将在当前光标位置创建新白板。是否继续？<br>您可以在触发快捷键前左键点击选中白板。<br>您也可以在插件设置中更改默认行为。"
   },
-  "unsavedConfirm": {
-    "title": "未保存的更改",
-    "message": "您关闭了一个有未保存更改的编辑器，更改已自动保存。您要回滚吗？",
-    "save": "保留新版本",
-    "discard": "回滚",
-    "oldVersion": "旧版本",
-    "autoSavedVersion": "自动保存版本"
-  },
   "whiteboard": "白板",
   "settings": {
     "name": "js-draw 插件设置",

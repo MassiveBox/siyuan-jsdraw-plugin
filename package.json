@@ -35,8 +35,8 @@
     "vite-plugin-zip-pack": "^1.0.5"
   },
   "dependencies": {
-    "@massivebox/material-icons": "^1.34.0",
-    "@massivebox/js-draw": "^1.34.0",
+    "@massivebox/material-icons": "^1.34.1",
+    "@massivebox/js-draw": "^1.34.1",
     "ts-serializable": "^4.2.0"
   }
 }

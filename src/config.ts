@@ -6,7 +6,7 @@ import {getFirstDefined} from "@/helper";
 import {ErrorReporter, InvalidBackgroundColorError} from "@/errors";
 import { updateImageColorInversionStyle } from '@/theme';
 
-const DEFAULT_ADDITIONAL_PENS = 2;
+const DEFAULT_ADDITIONAL_PENS = 0;
 const MAX_ADDITIONAL_PENS = 7;
 
 export interface Options {
@@ -21,6 +21,7 @@ export interface EditorOptions {
     grid: boolean
     background: string
     additionalPens: number
+    sidebars: boolean
 }
 
 export class PluginConfig {
@@ -52,7 +53,8 @@ export class PluginConfig {
                 restorePosition: getFirstDefined(jsonObj?.editorOptions?.restorePosition, jsonObj?.restorePosition,  true),
                 grid: getFirstDefined(jsonObj?.editorOptions?.grid, jsonObj?.grid, true),
                 background: getFirstDefined(jsonObj?.editorOptions?.background, jsonObj?.background, "#ffffff"),
-                additionalPens: getFirstDefined(jsonObj?.editorOptions?.additionalPens, DEFAULT_ADDITIONAL_PENS)
+                additionalPens: getFirstDefined(jsonObj?.editorOptions?.additionalPens, DEFAULT_ADDITIONAL_PENS),
+                sidebars: getFirstDefined(jsonObj?.editorOptions?.sidebars, true)
             },
             imageColorInversion: getFirstDefined(jsonObj?.imageColorInversion, 'on-dark'),
         };
@@ -111,7 +113,8 @@ export class PluginConfigViewer {
                         ? color
                         : this.config.options.editorOptions.background,
                     restorePosition: !!data.restorePosition,
-                    additionalPens: Math.max(0, Math.min(MAX_ADDITIONAL_PENS, isNaN(parsedAdditionalPens) ? DEFAULT_ADDITIONAL_PENS : parsedAdditionalPens))
+                    additionalPens: Math.max(0, Math.min(MAX_ADDITIONAL_PENS, isNaN(parsedAdditionalPens) ? DEFAULT_ADDITIONAL_PENS : parsedAdditionalPens)),
+                    sidebars: data.sidebars ?? true
                 },
                 imageColorInversion: data.imageColorInversion,
             },
@@ -173,6 +176,14 @@ export class PluginConfigViewer {
             title: this.plugin.i18n.settings.restorePosition.title,
             description: this.plugin.i18n.settings.restorePosition.description,
             value: this.config.options.editorOptions.restorePosition,
+            type: 'checkbox'
+        });
+
+        this.settingUtils.addItem({
+            key: "sidebars",
+            title: this.plugin.i18n.settings.sidebars.title,
+            description: this.plugin.i18n.settings.sidebars.description,
+            value: this.config.options.editorOptions.sidebars,
             type: 'checkbox'
         });
 

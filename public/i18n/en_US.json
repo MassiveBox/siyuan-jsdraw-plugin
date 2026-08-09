@@ -53,6 +53,10 @@
       "title": "Remember editor position",
       "description": "When enabled, the editor will remember the zoom factor and position, and it will restore them the next time you open the same whiteboard."
     },
+    "sidebars": {
+      "title": "Enable tool sidebars",
+      "description": "Show the rapid-access sidebar inside the editor for supported tools. It provides quick access to settings for the active tool, such as color and thickness."
+    },
     "noSelectionAction": {
       "title": "Shortcut without selection",
       "description": "What to do when the shortcut is pressed but no whiteboard is selected.",

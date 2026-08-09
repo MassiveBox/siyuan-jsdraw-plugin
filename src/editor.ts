@@ -79,7 +79,7 @@ export class PluginEditor {
         return svgElem.outerHTML;
     }
 
-    private constructor(filename: string) {
+    private constructor(filename: string, editorOptions: EditorOptions) {
 
         this.filename = filename;
 
@@ -87,6 +87,7 @@ export class PluginEditor {
         this.editor = new Editor(this.element, {
             localization: getLocalizationTable([window.siyuan.config.lang]),
             iconProvider: new MaterialIconProvider(),
+            sidebars: editorOptions.sidebars ? undefined : null,
         });
 
     }
@@ -116,10 +117,12 @@ export class PluginEditor {
     private setupAdditionalPens(count: number): void {
         const pens: PenTool[] = [];
         for (let i = 0; i < count; i++) {
-            pens.push(new PenTool(this.editor, `Pen ${i + 4}`, {
+            const pen = new PenTool(this.editor, `Pen ${i + 4}`, {
                 color: ADDITIONAL_PEN_COLORS[i % ADDITIONAL_PEN_COLORS.length],
                 thickness: 2,
-            }));
+            });
+            pen.setEnabled(false);
+            pens.push(pen);
         }
         if (pens.length > 0) {
             const primaryTools = this.editor.toolController.getPrimaryTools();
@@ -135,7 +138,7 @@ export class PluginEditor {
     }
 
     static async create(filename: string, defaultEditorOptions: EditorOptions, pluginI18n?: Record<string, any>): Promise<PluginEditor> {
-        const instance = new PluginEditor(filename);
+        const instance = new PluginEditor(filename, defaultEditorOptions);
         instance.initEditor();
         instance.setupAdditionalPens(defaultEditorOptions.additionalPens ?? 2);
         await instance.restoreOrInitFile(defaultEditorOptions);

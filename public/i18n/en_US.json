@@ -81,8 +81,6 @@
     "helpText": "Configure input stabilization and autocorrect parameters for all pens.",
     "sectionStabilization": "Stabilization",
     "sectionAutocorrect": "Autocorrect",
-    "sectionInput": "Input",
-    "ignoreTouch": "Ignore touch input",
     "mass": "Mass (inertia)",
     "springConstant": "Spring constant",
     "friction": "Friction",

@@ -81,8 +81,6 @@
     "helpText": "为所有画笔配置输入稳定和自动校正参数。",
     "sectionStabilization": "稳定",
     "sectionAutocorrect": "自动校正",
-    "sectionInput": "输入",
-    "ignoreTouch": "忽略触摸输入",
     "mass": "质量（惯性）",
     "springConstant": "弹簧常数",
     "friction": "摩擦系数",

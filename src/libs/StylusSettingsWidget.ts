@@ -1,14 +1,11 @@
 import {
     BaseWidget,
     PenTool,
-    PanZoomTool,
-    PanZoomMode,
     EditorEventType,
     Editor,
 } from '@massivebox/js-draw';
 import type { PointerEvt } from '@massivebox/js-draw';
 import CustomInputStabilizer from './CustomInputStabilizer';
-import TouchFilterInputMapper from './TouchFilterInputMapper';
 import {
     InputStabilizerOptions,
     defaultStabilizerOptions,
@@ -72,8 +69,6 @@ export default class StylusSettingsWidget extends BaseWidget {
 
     private stabOptions: InputStabilizerOptions;
     private autocorrectOptions: AutocorrectOptions;
-    private ignoreTouch: boolean;
-    private touchFilter: TouchFilterInputMapper;
     private updateInputs: () => void = () => {};
     private i18n: Record<string, string>;
     private patchedPens: WeakSet<PenTool> = new WeakSet();
@@ -82,22 +77,8 @@ export default class StylusSettingsWidget extends BaseWidget {
         super(editor, 'stylus-settings-widget');
         this.stabOptions = cloneOptions(defaultStabilizerOptions);
         this.autocorrectOptions = cloneAutocorrectOptions(defaultAutocorrectOptions);
-        this.ignoreTouch = false;
 
         this.i18n = (pluginI18n?.stylusSettings ?? {}) as Record<string, string>;
-
-        this.touchFilter = new TouchFilterInputMapper();
-        const panZoomTools = this.editor.toolController.getMatchingTools(PanZoomTool);
-        this.touchFilter.setShouldAllowTouch(() =>
-            panZoomTools.some((tool) =>
-                tool.getToolGroup() !== null
-                && tool.isEnabled()
-                && (tool.getMode() & (PanZoomMode.OneFingerTouchGestures
-                    | PanZoomMode.TwoFingerTouchGestures
-                    | PanZoomMode.SinglePointerGestures)) !== 0,
-            ),
-        );
-        this.editor.toolController.addInputMapper(this.touchFilter);
 
         this.container.classList.add('dropdownShowable');
 
@@ -123,12 +104,6 @@ export default class StylusSettingsWidget extends BaseWidget {
 
     protected getHelpText(): string {
         return this.i18n.helpText;
-    }
-
-    private setIgnoreTouch(enabled: boolean) {
-        this.ignoreTouch = enabled;
-        this.touchFilter.setEnabled(enabled);
-        this.updateInputs();
     }
 
     private getAllPenTools(): PenTool[] {
@@ -278,25 +253,6 @@ export default class StylusSettingsWidget extends BaseWidget {
             this.autocorrectOptions as unknown as Record<string, number>,
             () => this.applyAutocorrectOptions());
 
-        container.appendChild(this.makeSectionHeader(this.i18n.sectionInput));
-
-        const ignoreTouchRow = document.createElement('div');
-        ignoreTouchRow.style.display = 'contents';
-        const ignoreTouchLabel = document.createElement('label');
-        ignoreTouchLabel.innerText = this.i18n.ignoreTouch;
-        const ignoreTouchId = 'toolbar-stylus-ignore-touch';
-        ignoreTouchLabel.htmlFor = ignoreTouchId;
-        const ignoreTouchCheckbox = document.createElement('input');
-        ignoreTouchCheckbox.type = 'checkbox';
-        ignoreTouchCheckbox.id = ignoreTouchId;
-        ignoreTouchCheckbox.checked = this.ignoreTouch;
-        ignoreTouchCheckbox.oninput = () => {
-            this.setIgnoreTouch(ignoreTouchCheckbox.checked);
-        };
-        const ignoreTouchSpacer = document.createElement('span');
-        ignoreTouchRow.replaceChildren(ignoreTouchLabel, ignoreTouchCheckbox, ignoreTouchSpacer);
-        container.appendChild(ignoreTouchRow);
-
         const resetButton = document.createElement('button');
         resetButton.type = 'button';
         resetButton.classList.add('toolbar-button');
@@ -308,8 +264,6 @@ export default class StylusSettingsWidget extends BaseWidget {
         resetButton.onclick = () => {
             this.stabOptions = cloneOptions(defaultStabilizerOptions);
             this.autocorrectOptions = cloneAutocorrectOptions(defaultAutocorrectOptions);
-            this.ignoreTouch = false;
-            this.touchFilter.setEnabled(false);
             this.updateInputs();
             this.applyStabilizerOptions();
             this.applyAutocorrectOptions();
@@ -335,7 +289,6 @@ export default class StylusSettingsWidget extends BaseWidget {
                 const entry = allEntries.find(e => e.key === `toolbar-stylus-ac-${meta.key}`);
                 entry?.setValue(this.autocorrectOptions[meta.key]);
             }
-            ignoreTouchCheckbox.checked = this.ignoreTouch;
         };
 
         return true;
@@ -346,7 +299,6 @@ export default class StylusSettingsWidget extends BaseWidget {
             ...super.serializeState(),
             stabOptions: { ...this.stabOptions },
             autocorrectOptions: { ...this.autocorrectOptions },
-            ignoreTouch: this.ignoreTouch,
         };
     }
 
@@ -357,10 +309,6 @@ export default class StylusSettingsWidget extends BaseWidget {
         }
         if (state.autocorrectOptions && typeof state.autocorrectOptions === 'object') {
             this.autocorrectOptions = { ...defaultAutocorrectOptions, ...state.autocorrectOptions };
-        }
-        if (typeof state.ignoreTouch === 'boolean') {
-            this.ignoreTouch = state.ignoreTouch;
-            this.touchFilter.setEnabled(this.ignoreTouch);
         }
         this.applyStabilizerOptions();
         this.applyAutocorrectOptions();

@@ -5,8 +5,8 @@ import {
     PanZoomMode,
     EditorEventType,
     Editor,
-} from 'js-draw';
-import type { PointerEvt } from 'js-draw';
+} from '@massivebox/js-draw';
+import type { PointerEvt } from '@massivebox/js-draw';
 import CustomInputStabilizer from './CustomInputStabilizer';
 import TouchFilterInputMapper from './TouchFilterInputMapper';
 import {

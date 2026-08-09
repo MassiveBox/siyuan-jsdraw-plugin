@@ -3,9 +3,9 @@ import {
     InputEvtType,
     isPointerEvt,
     Viewport,
-} from 'js-draw';
-import type { InputEvt, PointerEvt, GestureCancelEvt } from 'js-draw';
-import { Vec2 } from 'js-draw';
+} from '@massivebox/js-draw';
+import type { InputEvt, PointerEvt, GestureCancelEvt } from '@massivebox/js-draw';
+import { Vec2 } from '@massivebox/js-draw';
 import { InputStabilizerOptions, defaultStabilizerOptions } from './InputStabilizerOptions';
 
 const untilNextAnimationFrame = () =>

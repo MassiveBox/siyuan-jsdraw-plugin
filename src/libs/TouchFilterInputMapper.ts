@@ -1,5 +1,5 @@
-import { InputMapper, isPointerEvt, PointerDevice } from 'js-draw';
-import type { InputEvt } from 'js-draw';
+import { InputMapper, isPointerEvt, PointerDevice } from '@massivebox/js-draw';
+import type { InputEvt } from '@massivebox/js-draw';
 
 export default class TouchFilterInputMapper extends InputMapper {
     private _enabled = false;

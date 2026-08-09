@@ -1,4 +1,4 @@
-import {MaterialIconProvider} from "@js-draw/material-icons";
+import {MaterialIconProvider} from "@massivebox/material-icons";
 import {PluginAsset, PluginFile} from "@/file";
 import {JSON_MIME, STORAGE_PATH, SVG_MIME, TOOLBAR_FILENAME} from "@/const";
 import {refreshImagesForFile} from "@/refresh";
@@ -12,11 +12,11 @@ import Editor, {
     PenTool,
     Vec2,
     Viewport
-} from "js-draw";
+} from "@massivebox/js-draw";
 import StylusSettingsWidget from "@/libs/StylusSettingsWidget";
 import {EditorOptions} from "@/config";
 import {getSiYuanThemeCSS} from "@/theme";
-import 'js-draw/styles';
+import '@massivebox/js-draw/styles';
 import {
     ErrorReporter,
     GenericSaveError, InternationalizedError

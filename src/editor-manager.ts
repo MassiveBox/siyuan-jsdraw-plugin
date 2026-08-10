@@ -94,15 +94,17 @@ export class EditorManager {
             return;
         }
         openEditors.set(editor.getElement(), { editor, lock });
-        editor.setOnClose(async () => {
-            releaseEditor(editor.getElement());
-            dialog.destroy();
-        });
         const dialog = new Dialog({
             width: "100vw",
             height: getFrontend() == "mobile" ? "100vh" : "90vh",
             content: `<div id="DrawingPanel" style="width:100%; height: 100%;"></div>`,
             disableClose: true,
+            destroyCallback: () => {
+                releaseEditor(editor.getElement());
+            },
+        });
+        editor.setOnClose(async () => {
+            dialog.destroy();
         });
         dialog.element.querySelector("#DrawingPanel").appendChild(editor.getElement());
     }

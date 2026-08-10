@@ -66,3 +66,9 @@ export class MustOpenDocumentError extends InternationalizedError {
         super('mustOpenDocument');
     }
 }
+
+export class LockBlockedError extends InternationalizedError {
+    constructor() {
+        super('lockBlocked');
+    }
+}

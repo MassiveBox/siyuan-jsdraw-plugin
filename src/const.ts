@@ -8,3 +8,6 @@ export const CONFIG_FILENAME = "conf.json";
 export const SYNC_MARKER_FILENAME = "sync-marker.json";
 export const EMBED_PATH = "/plugins/siyuan-jsdraw-plugin/webapp/?path=";
 export const DUMMY_HOST = "https://dummy.host/";
+
+export const LOCK_HEARTBEAT_INTERVAL_MS = 5000;
+export const LOCK_STALE_MS = 15000;

@@ -1,25 +1,34 @@
 import {Dialog, getFrontend, openTab, Plugin} from "siyuan";
 import {PluginEditor} from "@/editor";
 import DrawJSPlugin from "@/index";
-import {ErrorReporter, NoFilenameError} from "@/errors";
+import {ErrorReporter, LockBlockedError, NoFilenameError} from "@/errors";
+import {EditorLock} from "@/lock";
 
-const openEditors = new Map<HTMLElement, PluginEditor>();
+interface OpenEditorEntry {
+    editor: PluginEditor;
+    lock: EditorLock;
+}
+
+const openEditors = new Map<HTMLElement, OpenEditorEntry>();
 export function hasOpenEditors(): boolean { return openEditors.size > 0; }
+
+const pendingLocks = new Map<string, EditorLock>();
+
+function releaseEditor(element: HTMLElement): void {
+    const entry = openEditors.get(element);
+    if (entry) {
+        entry.lock.release();
+        openEditors.delete(element);
+    }
+}
 
 export class EditorManager {
 
-    private editor: PluginEditor
-    setEditor(editor: PluginEditor) { this.editor = editor;}
+    private filename: string;
 
-    static async create(filename: string, p: DrawJSPlugin) {
-        let instance = new EditorManager();
-        try {
-            let editor = await PluginEditor.create(filename, p.config.options.editorOptions, p.i18n);
-            instance.setEditor(editor);
-            openEditors.set(editor.getElement(), editor);
-        }catch (error) {
-            ErrorReporter.error(error);
-        }
+    static async create(filename: string, _p: DrawJSPlugin): Promise<EditorManager> {
+        const instance = new EditorManager();
+        instance.filename = filename;
         return instance;
     }
 
@@ -32,21 +41,34 @@ export class EditorManager {
                     ErrorReporter.error(new NoFilenameError());
                     return;
                 }
+                let lock = pendingLocks.get(filename);
+                if (lock) {
+                    pendingLocks.delete(filename);
+                } else {
+                    const editorId = this.data.editorId ?? crypto.randomUUID();
+                    lock = await EditorLock.acquire(p, filename, editorId);
+                    if (lock == null) {
+                        ErrorReporter.error(new LockBlockedError());
+                        return;
+                    }
+                }
+                lock.startHeartbeat();
                 try {
                     const editor = await PluginEditor.create(filename, p.config.options.editorOptions, p.i18n);
                     this.element.appendChild(editor.getElement());
-                    openEditors.set(this.element, editor);
+                    openEditors.set(this.element, { editor, lock });
                 }catch (error){
+                    lock.release();
                     ErrorReporter.error(error);
                 }
             },
             beforeDestroy() {
-                openEditors.delete(this.element);
+                releaseEditor(this.element);
             }
         });
     }
 
-    toTab(p: Plugin) {
+    private toTab(p: Plugin, editorId: string) {
         openTab({
             app: p.app,
             custom: {
@@ -54,34 +76,63 @@ export class EditorManager {
                 icon: 'iconDraw',
                 id: "siyuan-jsdraw-pluginwhiteboard",
                 data: {
-                    filename: this.editor.getFilename(),
+                    filename: this.filename,
+                    editorId,
                 }
             }
         });
     }
 
-    toDialog(_p: DrawJSPlugin) {
-        const pluginEditor = this.editor;
-
-        pluginEditor.setOnClose(async () => {
-            openEditors.delete(pluginEditor.getElement());
-            dialog.destroy();
-        });
-
+    private async toDialog(p: DrawJSPlugin, lock: EditorLock) {
+        lock.startHeartbeat();
+        let editor: PluginEditor;
+        try {
+            editor = await PluginEditor.create(this.filename, p.config.options.editorOptions, p.i18n);
+        }catch (error) {
+            lock.release();
+            ErrorReporter.error(error);
+            return;
+        }
+        openEditors.set(editor.getElement(), { editor, lock });
         const dialog = new Dialog({
             width: "100vw",
             height: getFrontend() == "mobile" ? "100vh" : "90vh",
             content: `<div id="DrawingPanel" style="width:100%; height: 100%;"></div>`,
             disableClose: true,
+            destroyCallback: () => {
+                releaseEditor(editor.getElement());
+            },
         });
-        dialog.element.querySelector("#DrawingPanel").appendChild(pluginEditor.getElement());
+        editor.setOnClose(async () => {
+            dialog.destroy();
+        });
+        dialog.element.querySelector("#DrawingPanel").appendChild(editor.getElement());
     }
 
-    open(p: DrawJSPlugin) {
-        if(getFrontend() != "mobile" && !p.config.options.dialogOnDesktop) {
-            this.toTab(p);
+    async open(p: DrawJSPlugin) {
+        const isTabMode = getFrontend() != "mobile" && !p.config.options.dialogOnDesktop;
+
+        if (isTabMode) {
+            for (const [, entry] of openEditors) {
+                if (entry.editor.getFilename() === this.filename) {
+                    this.toTab(p, entry.lock.getEditorId());
+                    return;
+                }
+            }
+        }
+
+        const editorId = crypto.randomUUID();
+        const lock = await EditorLock.acquire(p, this.filename, editorId);
+        if (lock == null) {
+            ErrorReporter.error(new LockBlockedError());
+            return;
+        }
+
+        if (isTabMode) {
+            pendingLocks.set(this.filename, lock);
+            this.toTab(p, editorId);
         } else {
-            this.toDialog(p);
+            await this.toDialog(p, lock);
         }
     }
 

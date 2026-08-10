@@ -6,9 +6,11 @@ const api: kernel.ISiyuan = siyuan;
 interface Lock {
     editorId: string;
     lastHeartbeat: number;
+    generation: number;
 }
 
 const locks = new Map<string, Lock>();
+let generationCounter = 0;
 
 api.plugin.lifecycle.onload = async () => {
     await api.logger.info(`[${api.plugin.name}] kernel plugin loaded`);
@@ -19,21 +21,22 @@ api.plugin.lifecycle.onload = async () => {
         if (existing && existing.editorId !== editorId && (now - existing.lastHeartbeat) <= LOCK_STALE_MS) {
             return { granted: false };
         }
-        locks.set(filename, { editorId, lastHeartbeat: now });
-        return { granted: true };
+        const generation = ++generationCounter;
+        locks.set(filename, { editorId, lastHeartbeat: now, generation });
+        return { granted: true, generation };
     }, "Acquire an edit lock for a whiteboard filename.");
 
-    await api.rpc.bind("release", async (filename: string, editorId: string) => {
+    await api.rpc.bind("release", async (filename: string, editorId: string, generation: number) => {
         const existing = locks.get(filename);
-        if (existing && existing.editorId === editorId) {
+        if (existing && existing.editorId === editorId && existing.generation === generation) {
             locks.delete(filename);
         }
         return { released: true };
     }, "Release an edit lock for a whiteboard filename.");
 
-    await api.rpc.bind("heartbeat", async (filename: string, editorId: string) => {
+    await api.rpc.bind("heartbeat", async (filename: string, editorId: string, generation: number) => {
         const existing = locks.get(filename);
-        if (existing && existing.editorId === editorId) {
+        if (existing && existing.editorId === editorId && existing.generation === generation) {
             existing.lastHeartbeat = Date.now();
         }
         return { ok: true };

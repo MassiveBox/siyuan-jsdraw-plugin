@@ -45,7 +45,8 @@ export class EditorManager {
                 if (lock) {
                     pendingLocks.delete(filename);
                 } else {
-                    lock = await EditorLock.acquire(p, filename);
+                    const editorId = this.data.editorId ?? crypto.randomUUID();
+                    lock = await EditorLock.acquire(p, filename, editorId);
                     if (lock == null) {
                         ErrorReporter.error(new LockBlockedError());
                         return;
@@ -67,7 +68,7 @@ export class EditorManager {
         });
     }
 
-    private toTab(p: Plugin) {
+    private toTab(p: Plugin, editorId: string) {
         openTab({
             app: p.app,
             custom: {
@@ -76,6 +77,7 @@ export class EditorManager {
                 id: "siyuan-jsdraw-pluginwhiteboard",
                 data: {
                     filename: this.filename,
+                    editorId,
                 }
             }
         });
@@ -111,13 +113,14 @@ export class EditorManager {
         if (isTabMode) {
             for (const [, entry] of openEditors) {
                 if (entry.editor.getFilename() === this.filename) {
-                    this.toTab(p);
+                    this.toTab(p, entry.lock.getEditorId());
                     return;
                 }
             }
         }
 
-        const lock = await EditorLock.acquire(p, this.filename);
+        const editorId = crypto.randomUUID();
+        const lock = await EditorLock.acquire(p, this.filename, editorId);
         if (lock == null) {
             ErrorReporter.error(new LockBlockedError());
             return;
@@ -125,7 +128,7 @@ export class EditorManager {
 
         if (isTabMode) {
             pendingLocks.set(this.filename, lock);
-            this.toTab(p);
+            this.toTab(p, editorId);
         } else {
             await this.toDialog(p, lock);
         }

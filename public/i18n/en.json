@@ -13,7 +13,7 @@
     "saveGeneric": "Error saving! The current drawing has been copied to your clipboard. You may need to create a new drawing and paste it there.",
     "mustSelect": "Select a whiteboard in your document by left-clicking it, then use this icon/shortcut to open the editor directly.  <a href='https://s.boxo.cc/jsdraw-plugin-instructions'>Usage instructions</a>",
     "mustOpenDocument": "No active document. You must select a document before using this shortcut.",
-    "lockBlocked": "This whiteboard is already open in another editor. Close it there first, then try again."
+    "lockBlocked": "This whiteboard is already open in another editor. Close it there, then try again. If you just closed it, wait a few seconds for the lock to release."
   },
   "createConfirm": {
     "title": "Create Whiteboard",

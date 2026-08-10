@@ -26,9 +26,6 @@ export default class DrawJSPlugin extends Plugin {
         EditorManager.registerTab(this);
         setupRefreshListener();
 
-        this.kernel.rpc.bind("notify", this.onKernelNotify);
-        this.eventBus.on("kernel-plugin-state-change", this.onKernelStateChange);
-
         await this.startConfig();
         await this.startAnalytics();
 
@@ -51,7 +48,7 @@ export default class DrawJSPlugin extends Plugin {
                 void this.analytics.sendEvent('create', {'from': 'slash'});
                 const filename = `jsdraw-${window.Lute.NewNodeID()}.svg`;
                 protyle.insert(getMarkdownBlock(filename), false, false);
-                (await EditorManager.create(filename, this)).open(this);
+                (await EditorManager.create(filename, this))?.open(this);
             }
         }];
 
@@ -65,7 +62,7 @@ export default class DrawJSPlugin extends Plugin {
                 label: this.i18n.editWhiteboard,
                 click: async () => {
                     void this.analytics.sendEvent('edit', {'from': 'menu'});
-                    (await EditorManager.create(filename, this)).open(this);
+                    (await EditorManager.create(filename, this))?.open(this);
                 }
             })
         })
@@ -100,31 +97,12 @@ export default class DrawJSPlugin extends Plugin {
 
     onunload() {
         teardownRefreshListener();
-        this.kernel.rpc.unbind("notify", this.onKernelNotify);
-        this.eventBus.off("kernel-plugin-state-change", this.onKernelStateChange);
         void this.analytics.sendEvent("unload");
     }
 
     uninstall() {
         void this.analytics.sendEvent("uninstall");
     }
-
-    private readonly onKernelNotify = async (message: string) => {
-        console.log(`[${this.name}] kernel notify:`, message);
-    };
-
-    private readonly onKernelStateChange = async (e: any) => {
-        const state = e.detail;
-        console.log(`[${this.name}] kernel state:`, state);
-        if (state?.code === 2) {
-            try {
-                const pong = await this.kernel.rpc.call.ping();
-                console.log(`[${this.name}] kernel ping:`, pong);
-            } catch (err) {
-                console.warn(`[${this.name}] kernel ping failed:`, err);
-            }
-        }
-    };
 
     private async handleEditShortcut() {
         await this.shortcutEditSelectedOrCreate(this.lastActiveProtyle)
@@ -171,7 +149,7 @@ export default class DrawJSPlugin extends Plugin {
             throw new NotAWhiteboardError();
         }
         void this.analytics.sendEvent('edit', {'from': 'shortcut'});
-        (await EditorManager.create(filename, this)).open(this);
+        (await EditorManager.create(filename, this))?.open(this);
 
     }
 
@@ -191,7 +169,7 @@ export default class DrawJSPlugin extends Plugin {
         const filename = `jsdraw-${window.Lute.NewNodeID()}.svg`;
         protyle.insert(getMarkdownBlock(filename), false, true);
         void this.analytics.sendEvent('create', {'from': 'shortcut'});
-        (await EditorManager.create(filename, this)).open(this);
+        (await EditorManager.create(filename, this))?.open(this);
         return;
     }
 

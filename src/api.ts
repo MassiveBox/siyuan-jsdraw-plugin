@@ -1,18 +1,24 @@
 /**
- * Copyright (c) 2023 frostime. All rights reserved.
+ * Copyright (c) 2023-2026 frostime. All rights reserved.
  * https://github.com/frostime/sy-plugin-template-vite
- * 
+ *
  * See API Document in [API.md](https://github.com/siyuan-note/siyuan/blob/master/API.md)
  * API 文档见 [API_zh_CN.md](https://github.com/siyuan-note/siyuan/blob/master/API_zh_CN.md)
  */
 
 import { fetchPost, fetchSyncPost, IWebSocketData } from "siyuan";
 
-
-export async function request(url: string, data: any) {
+export async function request(url: string, data: any, returnType: 'data' | 'response' = 'data') {
     let response: IWebSocketData = await fetchSyncPost(url, data);
     let res = response.code === 0 ? response.data : null;
-    return res;
+    return returnType === 'data' ? res : response;
+}
+
+
+export async function getBlockByID(blockId: string): Promise<Block> {
+    let sqlScript = `select * from blocks where id ='${blockId}'`;
+    let data = await sql(sqlScript);
+    return data?.[0];
 }
 
 
@@ -70,6 +76,23 @@ export async function setNotebookConf(notebook: NotebookId, conf: NotebookConf):
 
 
 // **************************************** File Tree ****************************************
+
+export async function listDocTree(notebook: NotebookId, path: string): Promise<IDocTreeNode[]> {
+    let data = {
+        notebook: notebook,
+        path: path
+    }
+    let url = '/api/filetree/listDocTree';
+    let resData = await request(url, data);
+    return resData?.tree;
+}
+
+export async function listDocsByPath(notebook: NotebookId, path: string) {
+    let url = '/api/filetree/listDocsByPath'
+    let payload = { notebook: notebook, path: path };
+    return request(url, payload);
+}
+
 export async function createDocWithMd(notebook: NotebookId, path: string, markdown: string): Promise<DocumentId> {
     let data = {
         notebook: notebook,
@@ -83,11 +106,21 @@ export async function createDocWithMd(notebook: NotebookId, path: string, markdo
 
 export async function renameDoc(notebook: NotebookId, path: string, title: string): Promise<DocumentId> {
     let data = {
-        doc: notebook,
+        notebook: notebook,
         path: path,
         title: title
     };
     let url = '/api/filetree/renameDoc';
+    return request(url, data);
+}
+
+
+export async function renameDocByID(id: string, title: string) {
+    let data = {
+        id: id,
+        title: title
+    };
+    let url = '/api/filetree/renameDocByID';
     return request(url, data);
 }
 
@@ -102,6 +135,15 @@ export async function removeDoc(notebook: NotebookId, path: string) {
 }
 
 
+export async function removeDocByID(id: string) {
+    let data = {
+        id: id
+    };
+    let url = '/api/filetree/removeDocByID';
+    return request(url, data);
+}
+
+
 export async function moveDocs(fromPaths: string[], toNotebook: NotebookId, toPath: string) {
     let data = {
         fromPaths: fromPaths,
@@ -109,6 +151,15 @@ export async function moveDocs(fromPaths: string[], toNotebook: NotebookId, toPa
         toPath: toPath
     };
     let url = '/api/filetree/moveDocs';
+    return request(url, data);
+}
+
+export async function moveDocsByID(fromIDs: string[], toID: string) {
+    let data = {
+        fromIDs,
+        toID
+    };
+    let url = '/api/filetree/moveDocsByID';
     return request(url, data);
 }
 
@@ -138,6 +189,15 @@ export async function getIDsByHPath(notebook: NotebookId, path: string): Promise
         path: path
     };
     let url = '/api/filetree/getIDsByHPath';
+    return request(url, data);
+}
+
+
+export async function getPathByID(id: BlockId): Promise<string> {
+    let data = {
+        id: id
+    };
+    let url = '/api/filetree/getPathByID';
     return request(url, data);
 }
 
@@ -298,11 +358,7 @@ export async function sql(sql: string): Promise<any[]> {
     return request(url, sqldata);
 }
 
-export async function getBlockByID(blockId: string): Promise<Block> {
-    let sqlScript = `select * from blocks where id ='${blockId}'`;
-    let data = await sql(sqlScript);
-    return data[0];
-}
+
 
 // **************************************** Template ****************************************
 
@@ -323,23 +379,29 @@ export async function renderSprig(template: string): Promise<string> {
 
 // **************************************** File ****************************************
 
-export async function getFile(path: string): Promise<any> {
+export async function getFile(path: string, type?: "text" | "json"): Promise<string | object> {
     let data = {
         path: path
     }
     let url = '/api/file/getFile';
-    return new Promise((resolve, _) => {
-        fetchPost(url, data, (content: any) => {
-            resolve(content)
-        });
+    let promise = new Promise<IWebSocketData>((resolve, reject) => {
+        try {
+            fetchPost(url, data, (response: any) => {
+                let data = type === 'json' ? JSON.parse(response) : response;
+                resolve(data);
+            });
+        } catch (error) {
+            reject(error);
+        }
     });
+    let response: IWebSocketData = await promise;
+    return response;
 }
-
 
 /**
  * fetchPost will secretly convert data into json, this func merely return Blob
- * @param endpoint 
- * @returns 
+ * @param endpoint
+ * @returns
  */
 export const getFileBlob = async (path: string): Promise<Blob | null> => {
     const endpoint = '/api/file/getFile'
@@ -356,15 +418,21 @@ export const getFileBlob = async (path: string): Promise<Blob | null> => {
     return data;
 }
 
-
-export async function putFile(path: string, isDir: boolean, file: any) {
+export async function putFile(path: string, isDir: boolean, file: File | Blob) {
     let form = new FormData();
     form.append('path', path);
     form.append('isDir', isDir.toString());
-    // Copyright (c) 2023, terwer.
-    // https://github.com/terwer/siyuan-plugin-importer/blob/v1.4.1/src/api/kernel-api.ts
-    //form.append('modTime', Math.floor(Date.now() / 1000).toString()); // fix wrong mod time
-    form.append('file', file);
+
+    form.append('modTime', Math.floor(Date.now()).toString());
+    // form.append('file', file);
+    if (file instanceof File) {
+        form.append('file', file);
+    } else if (file instanceof Blob) {
+        form.append('file', file);
+    } else {
+        form.append('file', new Blob());
+    }
+
     let url = '/api/file/putFile';
     return request(url, form);
 }
@@ -379,7 +447,7 @@ export async function removeFile(path: string) {
 
 
 
-export async function readDir(path: string): Promise<IResReadDir> {
+export async function readDir(path: string): Promise<IResReadDir[]> {
     let data = {
         path: path
     }
@@ -388,11 +456,55 @@ export async function readDir(path: string): Promise<IResReadDir> {
 }
 
 
+export async function saveBlob(filePath: string, data: Blob | File | Object | string) {
+    let dataBlob: Blob | File;
+
+    if (data instanceof Blob) {
+        dataBlob = data;
+    } else if (data instanceof File) {
+        dataBlob = data;
+    } else if (typeof data === 'object') {
+        dataBlob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    } else if (typeof data === 'string') {
+        if (filePath.endsWith('.json')) {
+            dataBlob = new Blob([data], { type: 'application/json' });
+        } else {
+            dataBlob = new Blob([data], { type: 'text/plain' });
+        }
+    } else {
+        throw new Error('Unsupported data type');
+    }
+
+    const fname = filePath.split("/").pop();
+
+    const file = new File([dataBlob], fname);
+
+    return putFile(filePath, false, file);
+}
+
+export const loadBlob = getFileBlob;
+
+
 // **************************************** Export ****************************************
 
-export async function exportMdContent(id: DocumentId): Promise<IResExportMdContent> {
+/**
+ * Export Markdown content
+ * See {@link https://github.com/siyuan-note/siyuan/issues/14032}
+ * @param id
+ * @param options
+ * @param options.refMode 2: Anchor text block chain; 3: Anchor text only; 4: Block reference converted to footnote + anchor hash
+ * @param options.embedMode 0: Use original text; 1: Use Blockquote
+ * @param options.yfm Export YAML information or not
+ * @returns
+ */
+export async function exportMdContent(id: DocumentId, options?: {
+    refMode?: 2 | 3 | 4;
+    embedMode?: 0 | 1;
+    yfm?: boolean;
+}): Promise<IResExportMdContent> {
     let data = {
-        id: id
+        id: id,
+        ...(options ?? {})
     }
     let url = '/api/export/exportMdContent';
     return request(url, data);

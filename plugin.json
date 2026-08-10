@@ -2,8 +2,19 @@
   "name": "siyuan-jsdraw-plugin",
   "author": "massivebox",
   "url": "https://github.com/massivebox/siyuan-jsdraw-plugin",
-  "version": "0.8.0",
-  "minAppVersion": "3.0.12",
+  "version": "0.9.0",
+  "minAppVersion": "3.7.0",
+  "kernels": [
+    "windows",
+    "linux",
+    "darwin",
+    "ios",
+    "android",
+    "harmony",
+    "docker",
+    "all"
+  ],
+  "disabledInPublish": true,
   "backends": [
     "windows",
     "linux",
@@ -21,16 +32,16 @@
     "desktop-window"
   ],
   "displayName": {
-    "en_US": "JS-Draw Whiteboard",
-    "zh_CN": "JS-Draw 白板"
+    "default": "JS-Draw Whiteboard",
+    "zh-CN": "JS-Draw 白板"
   },
   "description": {
-    "en_US": "Include a whiteboard for freehand drawing anywhere in your documents.",
-    "zh_CN": "在您的文档中添加一个自由绘图白板。"
+    "default": "Include a whiteboard for freehand drawing anywhere in your documents.",
+    "zh-CN": "在您的文档中添加一个自由绘图白板。"
   },
   "readme": {
-    "en_US": "README.md",
-    "zh_CN": "README-zh_CN.md"
+    "default": "README.md",
+    "zh-CN": "README-zh_CN.md"
   },
   "funding": {
     "custom": [

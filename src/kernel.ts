@@ -38,6 +38,10 @@ api.plugin.lifecycle.onload = async () => {
         }
         return { ok: true };
     }, "Refresh an edit lock's heartbeat.");
+
+    await api.rpc.bind("broadcastRefresh", async (filename: string) => {
+        await api.rpc.broadcast("refresh", [filename]);
+    }, "Broadcast an image-refresh signal to all frontend windows for the given filename.");
 };
 
 api.plugin.lifecycle.onrunning = async () => {
@@ -49,5 +53,6 @@ api.plugin.lifecycle.onunload = async () => {
     await api.rpc.unbind("acquire");
     await api.rpc.unbind("release");
     await api.rpc.unbind("heartbeat");
+    await api.rpc.unbind("broadcastRefresh");
     await api.logger.info(`[${api.plugin.name}] kernel plugin unloaded`);
 };

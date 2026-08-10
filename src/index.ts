@@ -24,7 +24,7 @@ export default class DrawJSPlugin extends Plugin {
         new ErrorReporter(this.i18n);
         loadIcons(this);
         EditorManager.registerTab(this);
-        setupRefreshListener();
+        setupRefreshListener(this);
 
         await this.startConfig();
         await this.startAnalytics();
@@ -96,7 +96,7 @@ export default class DrawJSPlugin extends Plugin {
     }
 
     onunload() {
-        teardownRefreshListener();
+        teardownRefreshListener(this);
         void this.analytics.sendEvent("unload");
     }
 

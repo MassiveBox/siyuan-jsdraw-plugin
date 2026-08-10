@@ -1,7 +1,7 @@
 import { filenameToAssetPath } from "@/helper";
+import type DrawJSPlugin from "@/index";
 
-const BROADCAST_CHANNEL_NAME = 'jsdraw-image-refresh';
-let channel: BroadcastChannel | null = null;
+let plugin: DrawJSPlugin | null = null;
 
 /**
  * Fetch each image with cache:'reload' to bypass the SiYuan cache, then reset
@@ -45,25 +45,18 @@ function findImagesByFilename(filename: string): HTMLImageElement[] {
 
 /**
  * Refresh all images in the open documents that reference the specified file.
- * Uses broadcast channel to notify other windows to refresh the image.
+ * Relays the refresh to other windows via the kernel plugin's RPC broadcast.
  *
  * @param filename - The asset filename (e.g., "jsdraw-abc123.svg")
- * @param isBroadcast - Whether this is a broadcast message (to avoid infinite loops)
+ * @param isBroadcast - Whether this call was triggered by a kernel broadcast (avoids loops)
  * @returns Number of images found for refresh
  */
 export function refreshImagesForFile(filename: string, isBroadcast: boolean = false): number {
     const images = findImagesByFilename(filename);
     bustCacheForImages(images);
 
-    if (!isBroadcast) { // if this is the original call, broadcast to other windows
-        try {
-            if (!channel) {
-                channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
-            }
-            channel.postMessage({ type: 'refresh', filename });
-        } catch (e) {
-            console.warn(`Failed to broadcast image refresh: ${e}`);
-        }
+    if (!isBroadcast && plugin) {
+        plugin.kernel.rpc.notify.broadcastRefresh(filename);
     }
 
     return images.length;
@@ -79,24 +72,16 @@ export function refreshAllSVGImages(): number {
     return images.length;
 }
 
-export function setupRefreshListener(): void {
-    try {
-        if (!channel) {
-            channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
-        }
-        channel.onmessage = (event: MessageEvent) => {
-            if (event.data?.type === 'refresh' && event.data?.filename) {
-                refreshImagesForFile(event.data.filename, true);
-            }
-        };
-    } catch (e) {
-        console.warn(`Failed to set up refresh listener: ${e}`);
-    }
+function onRefreshBroadcast(filename: string): void {
+    refreshImagesForFile(filename, true);
 }
 
-export function teardownRefreshListener(): void {
-    if (channel) {
-        channel.close();
-        channel = null;
-    }
+export function setupRefreshListener(p: DrawJSPlugin): void {
+    plugin = p;
+    p.kernel.rpc.bind("refresh", onRefreshBroadcast);
+}
+
+export function teardownRefreshListener(p: DrawJSPlugin): void {
+    p.kernel.rpc.unbind("refresh", onRefreshBroadcast);
+    plugin = null;
 }

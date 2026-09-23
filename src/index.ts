@@ -1,10 +1,13 @@
-import {getFrontend, Plugin, Protyle} from 'siyuan';
+import {getFrontend, Plugin, Protyle, showMessage} from 'siyuan';
 import {
     getMarkdownBlock,
+    copyTextToClipboard,
+    initClipboardFallback,
     loadIcons,
     getMenuHTML,
     findImgSrc,
     imgSrcToFilename} from "@/helper";
+import {extractPdfAssetPath, importPdfAsset} from "@/pdf-import";
 import {EditorManager, hasOpenEditors} from "@/editor-manager";
 import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
@@ -23,6 +26,8 @@ export default class DrawJSPlugin extends Plugin {
 
         new ErrorReporter(this.i18n);
         loadIcons(this);
+        const copyFallback = this.i18n.copyFallback as any;
+        initClipboardFallback(copyFallback.title, copyFallback.message, copyFallback.close);
         EditorManager.registerTab(this);
         setupRefreshListener(this);
 
@@ -66,6 +71,18 @@ export default class DrawJSPlugin extends Plugin {
                 }
             })
         })
+
+        const addPdfImportMenuItem = (e: any) => {
+            const pdfAssetPath = extractPdfAssetPath(e.detail.element);
+            if (!pdfAssetPath) return;
+            e.detail.menu.addItem({
+                icon: "iconDraw",
+                label: this.i18n.pdfImport,
+                click: () => void this.handlePdfImport(pdfAssetPath),
+            });
+        };
+        this.eventBus.on("open-menu-link", addPdfImportMenuItem);
+        this.eventBus.on("open-menu-fileannotationref", addPdfImportMenuItem);
 
         this.eventBus.on("ws-main", (e: any) => {
             if (e.detail?.cmd === "reloadPlugin") {
@@ -124,6 +141,20 @@ export default class DrawJSPlugin extends Plugin {
         if (document.querySelector("#DrawingPanel")) return false; // editor dialog is open
         if (!(protyle as any).protyle?.toolbar?.range) return false;
         return true;
+    }
+
+    private async handlePdfImport(pdfAssetPath: string) {
+        showMessage(this.i18n.pdfImporting, 0, 'info', 'pdf-import');
+        try {
+            const filename = await importPdfAsset(pdfAssetPath, this.config.options.editorOptions);
+            void this.analytics.sendEvent('pdf-import', {});
+            const markdown = getMarkdownBlock(filename);
+            await copyTextToClipboard(markdown);
+            (await EditorManager.create(filename, this))?.open(this);
+            showMessage(this.i18n.pdfImportSuccess, 10000, 'info', 'pdf-import');
+        } catch (e) {
+            ErrorReporter.error(e);
+        }
     }
 
     private async shortcutEditSelectedOrCreate(protyle?: Protyle) {

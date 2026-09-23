@@ -162,3 +162,33 @@ export const svelteDialog = (args: {
         close
     }
 }
+
+/**
+ * Fallback shown when automatic clipboard copying fails: displays the text
+ * in a pre-selected readonly textbox so the user can copy it manually.
+ */
+export const copyFallbackDialog = (args: {
+    title: string, message: string, text: string, closeLabel: string,
+    width?: string,
+}) => {
+    const escapeHtml = (s: string) =>
+        s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const dialog = new Dialog({
+        title: args.title,
+        content: `<div class="b3-dialog__content">
+    <div class="ft__breakword">${escapeHtml(args.message)}</div>
+    <div class="fn__hr"></div>
+    <textarea class="b3-text-field fn__block" rows="3" readonly>${escapeHtml(args.text)}</textarea>
+</div>
+<div class="b3-dialog__action">
+    <button class="b3-button b3-button--text">${escapeHtml(args.closeLabel)}</button>
+</div>`,
+        width: args.width ?? "520px",
+    });
+    const textarea: HTMLTextAreaElement = dialog.element.querySelector("textarea");
+    textarea.focus();
+    textarea.select();
+    dialog.element.querySelector(".b3-button").addEventListener("click", () => {
+        dialog.destroy();
+    });
+};

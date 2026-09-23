@@ -16,6 +16,7 @@ import Editor, {
 import StylusSettingsWidget from "@/libs/StylusSettingsWidget";
 import {EditorOptions} from "@/config";
 import {getSiYuanThemeCSS} from "@/theme";
+import {copyTextToClipboard} from "@/helper";
 import '@massivebox/js-draw/styles';
 import {
     ErrorReporter,
@@ -241,7 +242,7 @@ export class PluginEditor {
                 ErrorReporter.error(new GenericSaveError());
                 console.error(error);
             }
-            await navigator.clipboard.writeText(serialized);
+            await copyTextToClipboard(serialized);
             console.log("Couldn't save SVG: ", serialized)
             return;
         }

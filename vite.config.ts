@@ -62,6 +62,10 @@ export default defineConfig(buildTarget === "kernel" ? {
         }
     },
 
+    worker: {
+        format: 'es',
+    },
+
     plugins: [
         svelte(),
 

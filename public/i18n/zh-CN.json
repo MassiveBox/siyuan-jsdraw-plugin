@@ -1,8 +1,19 @@
 {
   "insertWhiteboard": "插入白板",
   "editWhiteboard": "编辑白板",
+  "pdfImport": "导入 PDF 到 JS-Draw 白板",
+  "pdfImporting": "正在导入 PDF，较大的文件可能需要较长时间，请稍候...",
+  "pdfImportSuccess": "PDF 导入完成。此白板的引用链接已复制到剪贴板，可将其粘贴到思源笔记中的任意位置。",
+  "copyFallback": {
+    "title": "复制到剪贴板",
+    "message": "自动复制失败，请手动选择下方文本并复制。",
+    "close": "关闭"
+  },
   "editShortcut": "编辑选中或创建新白板",
   "errors": {
+    "pdfLoadFailed": "无法加载 PDF 文件，请确认该文件仍存在于资源文件中。",
+    "pdfEmpty": "该 PDF 没有可导入的页面。",
+    "pdfRenderFailed": "无法渲染 PDF 页面，该文件可能已损坏或受保护。",
     "noFileID": "缺少文件 ID，无法打开文件。",
     "notAWhiteboard": "您必须选择白板，而不是普通图片。<a href='https://s.boxo.cc/jsdraw-plugin-instructions-zh-cn'>使用说明</a>",
     "syncIDNotFound": "在文档中找不到该绘图的 SyncID，请确保您尝试编辑的白板已包含在至少一个笔记中。",

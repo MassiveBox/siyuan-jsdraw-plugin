@@ -1,5 +1,6 @@
 import { Plugin } from 'siyuan';
 import {ASSETS_PATH} from "@/const";
+import {copyFallbackDialog} from "@/libs/dialog";
 
 const drawIcon: string = `
 <symbol id="iconDraw" viewBox="0 0 28 28">
@@ -73,4 +74,49 @@ export function getFirstDefined(...a) {
             return a[i];
         }
     }
+}
+
+export interface CopyFallbackOptions {
+    title: string;
+    message: string;
+    close: string;
+}
+let fallbackOptions: CopyFallbackOptions | null = null;
+
+export function initClipboardFallback(title: string, message: string, close: string): void {
+    fallbackOptions = { title, message, close };
+}
+
+/**
+ * Copy text to the clipboard with a fallback dialog for manual copying
+ *
+ * NOTE: navigator.clipboard.writeText() can pend indefinitely ex.
+ * when the document is not focused, so it is raced against a timeout.
+ * Returns true on success, false otherwise.
+ *
+ * Use `initClipboardFallback` before this function
+ */
+export async function copyTextToClipboard(
+    text: string,
+    timeoutMs: number = 3000,
+): Promise<boolean> {
+    try {
+        await Promise.race([
+            navigator.clipboard.writeText(text),
+            new Promise((_, reject) => setTimeout(
+                () => reject(new Error('clipboard timeout')), timeoutMs)),
+        ]);
+        return true;
+    } catch (e) {
+        console.warn('Copying to clipboard failed:', e);
+    }
+    if (fallbackOptions) {
+        copyFallbackDialog({
+            title: fallbackOptions.title,
+            message: fallbackOptions.message,
+            closeLabel: fallbackOptions.close,
+            text,
+        });
+    }
+    return false;
 }

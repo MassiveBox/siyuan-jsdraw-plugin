@@ -1,8 +1,19 @@
 {
   "insertWhiteboard": "Insert whiteboard",
   "editWhiteboard": "Edit whiteboard",
+  "pdfImport": "Import PDF to JS-Draw Whiteboard",
+  "pdfImporting": "Importing PDF. This may take long for heavy PDFs. Please wait...",
+  "pdfImportSuccess": "PDF import completed. A reference to this whiteboard has been copied to your clipboard, paste it anywhere within your SiYuan notes.",
+  "copyFallback": {
+    "title": "Copy to clipboard",
+    "message": "Automatic copying failed. Select the text below and copy it manually.",
+    "close": "Close"
+  },
   "editShortcut": "Edit/create whiteboard",
   "errors": {
+    "pdfLoadFailed": "Couldn't load the PDF file. Make sure it still exists in your assets.",
+    "pdfEmpty": "The PDF has no pages to import.",
+    "pdfRenderFailed": "Couldn't render the PDF pages. The file may be corrupted or protected.",
     "noFileID": "File ID missing - couldn't open file.",
     "notAWhiteboard": "You must select a whiteboard, not a regular image. <a href='https://s.boxo.cc/jsdraw-plugin-instructions'>Usage instructions</a>",
     "syncIDNotFound": "Couldn't find SyncID in document for drawing, make sure you're trying to edit a whiteboard that is included in at least a note.",

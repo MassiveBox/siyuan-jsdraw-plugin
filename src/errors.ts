@@ -72,3 +72,21 @@ export class LockBlockedError extends InternationalizedError {
         super('lockBlocked');
     }
 }
+
+export class PdfLoadError extends InternationalizedError {
+    constructor() {
+        super('pdfLoadFailed');
+    }
+}
+
+export class PdfEmptyError extends InternationalizedError {
+    constructor() {
+        super('pdfEmpty');
+    }
+}
+
+export class PdfRenderError extends InternationalizedError {
+    constructor() {
+        super('pdfRenderFailed');
+    }
+}

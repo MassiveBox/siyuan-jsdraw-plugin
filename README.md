@@ -1,7 +1,7 @@
 
 # SiYuan js-draw Plugin
 
-This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan documents.
+This plugin allows you to embed [js-draw](https://git.boxo.cc/massivebox/js-draw) whiteboards anywhere in your SiYuan documents.
 
 ▶️ [LiuYun thread](https://liuyun.io/article/1770978310553)
 
@@ -9,10 +9,11 @@ This plugin allows you to embed js-draw whiteboards anywhere in your SiYuan docu
 
 - **Stylus support**: full stylus support, with pressure sensitivity.
 - **Light/dark mode**: draw in light or dark mode, and have your drawings automatically adapt to your SiYuan theme.
+- **PDF import**: draw, highlight and edit on a copy of your PDF file.
 - **Auto-save**: your drawing is saved automatically as you draw.
 - **Optimized for multi-device**: edit on a device and sync to others with auto-refresh.
 - **Fully customizable**: all the options you need in the plugin settings page.
-- **And much more**: all the features of [js-draw](https://github.com/personalizedrefrigerator/js-draw) are available.
+- **And much more**: all the features of js-draw are available.
 
 For the planned features, check out the [Projects](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/projects) tab!
 
@@ -35,6 +36,14 @@ Select an existing whiteboard by left-clicking it, then open the editor in one o
 - Press `Alt+Shift+D` or click the toolbar icon.
 - Right-click the whiteboard (or tap the three dots on mobile) and choose **Plugin → Edit whiteboard**.
 
+### Importing a PDF
+
+Right-click on a PDF reference in your notes, then click Plugin > Import PDF to JS-Draw Whiteboard.  
+The PDF import will then start, and may take several seconds depending on your hardware and the size of the document.
+
+Once the import is done, the Editor will open, and the reference to the editable copy of the PDF will be copied to your clipboard.  
+Simply paste it anywhere in your notes. You will be able to edit it normally as any other JS-Draw whiteboard.
+
 ## Contributing
 Contributions are always welcome!  
 The Chinese translation is made by AI, and I'm unable to thorougly verify it because I don't speak Chinese. If you do and find issues, please let me know.  
@@ -43,7 +52,7 @@ Please [open an issue](https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/issue
 ## Thanks to
 This project couldn't have been possible without (in no particular order):
 - The [SiYuan](https://github.com/siyuan-note/siyuan) project
-- [js-draw](https://github.com/personalizedrefrigerator/js-draw)
+- Upstream [js-draw](https://github.com/personalizedrefrigerator/js-draw), from which the [fork](https://git.boxo.cc/massivebox/js-draw) used by this project is derived
 - [SiYuan plugin sample with vite and svelte](https://github.com/siyuan-note/plugin-sample-vite-svelte)
 - [siyuan-drawio-plugin](https://github.com/zt8989/siyuan-drawio-plugin) and
   [siyuan-plugin-whiteboard](https://github.com/zuoez02/siyuan-plugin-whiteboard) for inspiration and bits of code

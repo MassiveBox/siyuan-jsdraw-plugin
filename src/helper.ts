@@ -61,9 +61,15 @@ export function findImgSrc(element: HTMLElement): string | null {
 export function imgSrcToFilename(imgSrc: string | null): string | null {
 
     if (!imgSrc) return null;
+    var path: string;
 
-    const url = new URL(imgSrc);
-    const path = decodeURIComponent(url.pathname);
+    try {
+        const url = new URL(imgSrc);
+        path = decodeURIComponent(url.pathname);
+    }catch{
+        path = imgSrc;
+    }
+
     return assetPathToFilename(path);
 
 }

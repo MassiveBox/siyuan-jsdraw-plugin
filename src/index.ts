@@ -59,21 +59,14 @@ export default class DrawJSPlugin extends Plugin {
 
         this.eventBus.on("open-menu-image", (e: any) => {
             const imgSrc = findImgSrc(e.detail.element);
-            if (!imgSrc) return;
-            const filename = imgSrcToFilename(imgSrc);
-            if (!filename || !filename.endsWith('.svg')) return;
-            e.detail.menu.addItem({
-                icon: "iconDraw",
-                label: this.i18n.editWhiteboard,
-                click: async () => {
-                    void this.analytics.sendEvent('edit', {'from': 'menu'});
-                    (await EditorManager.create(filename, this))?.open(this);
-                }
-            })
+            this.addEditOption(imgSrc, e.detail.menu);
         })
 
-        const addPdfImportMenuItem = (e: any) => {
-            const pdfAssetPath = extractPdfAssetPath(e.detail.element);
+        const addLinkMenuItem = (e: any) => {
+            const url = e.detail.element.getAttribute('data-href'); // try to edit SVG from URL
+            this.addEditOption(url, e.detail.menu)
+            
+            const pdfAssetPath = extractPdfAssetPath(e.detail.element); // fallback to PDF import
             if (!pdfAssetPath) return;
             e.detail.menu.addItem({
                 icon: "iconDraw",
@@ -81,8 +74,8 @@ export default class DrawJSPlugin extends Plugin {
                 click: () => void this.handlePdfImport(pdfAssetPath),
             });
         };
-        this.eventBus.on("open-menu-link", addPdfImportMenuItem);
-        this.eventBus.on("open-menu-fileannotationref", addPdfImportMenuItem);
+        this.eventBus.on("open-menu-link", addLinkMenuItem);
+        this.eventBus.on("open-menu-fileannotationref", addLinkMenuItem);
 
         this.eventBus.on("ws-main", (e: any) => {
             if (e.detail?.cmd === "reloadPlugin") {
@@ -119,6 +112,19 @@ export default class DrawJSPlugin extends Plugin {
 
     uninstall() {
         void this.analytics.sendEvent("uninstall");
+    }
+
+    private async addEditOption(imgSrc: string, menu: any) {
+        const filename = imgSrcToFilename(imgSrc);
+        if (!filename || !filename.endsWith('.svg')) return;
+        menu.addItem({
+            icon: 'iconDraw',
+            label: this.i18n.editWhiteboard,
+            click: async () => {
+                void this.analytics.sendEvent('edit', {'from': 'menu'});
+                (await EditorManager.create(filename, this))?.open(this);
+            }
+        })
     }
 
     private async handleEditShortcut() {
@@ -188,8 +194,8 @@ export default class DrawJSPlugin extends Plugin {
         if (askFirst) {
             const confirmed = await new Promise<boolean>((resolve) => {
                 confirmDialog({
-                    title: this.i18n.createConfirm.title,
-                    content: this.i18n.createConfirm.message,
+                    title: (this.i18n.createConfirm as any).title,
+                    content: (this.i18n.createConfirm as any).message,
                     confirm: () => resolve(true),
                     cancel: () => resolve(false),
                 });

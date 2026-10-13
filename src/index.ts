@@ -8,13 +8,16 @@ import {
     findImgSrc,
     imgSrcToFilename} from "@/helper";
 import {extractPdfAssetPath, importPdfAsset} from "@/pdf-import";
-import {EditorManager, hasOpenEditors} from "@/editor-manager";
+import {EditorManager, getOpenEditors} from "@/editor-manager";
 import {PluginConfig, PluginConfigViewer} from "@/config";
 import {Analytics} from "@/analytics";
 import {ErrorReporter, MustSelectError, NotAWhiteboardError, MustOpenDocumentError} from "@/errors";
 import { confirmDialog } from '@/libs/dialog';
 import { setupRefreshListener, teardownRefreshListener, refreshAllSVGImages } from '@/refresh';
 import { updateImageColorInversionStyle } from '@/theme';
+import {PluginEditor} from "@/editor";
+import {getFileBlob} from "@/api";
+import {DATA_PATH, ASSETS_PATH} from "@/const";
 
 export default class DrawJSPlugin extends Plugin {
 
@@ -77,18 +80,41 @@ export default class DrawJSPlugin extends Plugin {
         this.eventBus.on("open-menu-link", addLinkMenuItem);
         this.eventBus.on("open-menu-fileannotationref", addLinkMenuItem);
 
-        this.eventBus.on("ws-main", (e: any) => {
-            if (e.detail?.cmd === "reloadPlugin") {
-                const dataChangePlugins: string[] = e.detail?.data?.dataChangePlugins ?? [];
-                if (dataChangePlugins.includes("siyuan-jsdraw-plugin")) {
-                    if (hasOpenEditors()) {
-                        window.location.reload();
-                    } else {
-                        refreshAllSVGImages();
+        this.eventBus.on("sync-end", async () => {
+            // Check open editors for content mismatches
+            const openEditors = getOpenEditors();
+            for (const [filename, editor] of openEditors) {
+                try {
+                    const assetPath = DATA_PATH + ASSETS_PATH + filename;
+                    const blob = await getFileBlob(assetPath);
+                    if (!blob) continue;
+                    const diskContent = await blob.text();
+                    
+                    const liveContent = editor.getEditor().toSVG().outerHTML;
+                    const normalizedLive = PluginEditor.normalizeSVG(liveContent);
+                    const normalizedDisk = PluginEditor.normalizeSVG(diskContent);
+                    const lastSaved = editor.getLastSavedNormalized?.() ?? null;
+                    
+                    // disk == live → nothing to do
+                    if (normalizedDisk === normalizedLive) {
+                        continue;
                     }
+                    // disk == lastSaved → remote didn't change; diff is local unsaved strokes → skip
+                    if (lastSaved && normalizedDisk === lastSaved) {
+                        continue;
+                    }
+                    // else → remote changed; full window reload
+                    console.log(`[jsdraw] Sync: ${filename} changed remotely, reloading window`);
+                    window.location.reload();
+                    return;
+                } catch (e) {
+                    console.warn(`[jsdraw] Sync check failed for ${filename}:`, e);
                 }
             }
-        })
+            
+            // Only reached if no editor needed reload: refresh document images
+            refreshAllSVGImages();
+        });
 
         this.addCommand({
             langKey: "editShortcut",

@@ -2,7 +2,6 @@ import {MaterialIconProvider} from "@massivebox/material-icons";
 import {PluginAsset, PluginFile} from "@/file";
 import {JSON_MIME, STORAGE_PATH, SVG_MIME, TOOLBAR_FILENAME} from "@/const";
 import {refreshImagesForFile} from "@/refresh";
-import {bumpSyncMarker} from "@/sync";
 import Editor, {
     AbstractToolbar,
     BackgroundComponentBackgroundType,
@@ -47,11 +46,28 @@ export class PluginEditor {
 
     private toolbar: AbstractToolbar | null = null;
 
+    private lastSavedNormalized: string | null = null;
+    private contentDirty: boolean = false;
+
     private static readonly viewParam: string = 'editorview';
+
+    /** Returns SVG string without the editorview attribute for comparison. */
+    static normalizeSVG(svg: string): string {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svg, 'image/svg+xml');
+        const svgElem = doc.documentElement;
+        Array.from(svgElem.attributes).forEach(attr => {
+            if (attr.name.toLowerCase() === PluginEditor.viewParam) {
+                svgElem.removeAttribute(attr.name);
+            }
+        });
+        return svgElem.outerHTML;
+    }
 
     getElement(): HTMLElement { return this.element; }
     getEditor(): Editor { return this.editor; }
     getFilename(): string { return this.filename; }
+    getLastSavedNormalized(): string | null { return this.lastSavedNormalized; }
 
     setOnClose(callback: () => void): void {
         if (this.toolbar) {
@@ -157,6 +173,9 @@ export class PluginEditor {
 
             await this.editor.loadFromSVG(drawingContent);
 
+            // Seed lastSavedNormalized from disk content
+            this.lastSavedNormalized = PluginEditor.normalizeSVG(drawingContent);
+
             // restore position and zoom
             const svgElem = new DOMParser().parseFromString(drawingContent, SVG_MIME).documentElement;
             const editorViewStr = svgElem.getAttribute(PluginEditor.viewParam);
@@ -178,6 +197,9 @@ export class PluginEditor {
                 type: defaultEditorOptions.grid ? BackgroundComponentBackgroundType.Grid : BackgroundComponentBackgroundType.SolidColor,
                 autoresize: true
             }));
+            // seed with empty canvas normalized
+            const emptySvg = this.editor.toSVG().outerHTML;
+            this.lastSavedNormalized = PluginEditor.normalizeSVG(emptySvg);
         }
 
     }
@@ -210,8 +232,14 @@ export class PluginEditor {
 
     private setupChangeListeners(): void {
         // Content changes (drawing, adding objects, etc.)
-        this.editor.notifier.on(EditorEventType.CommandDone, () => this.scheduleSave());
-        this.editor.notifier.on(EditorEventType.CommandUndone, () => this.scheduleSave());
+        this.editor.notifier.on(EditorEventType.CommandDone, () => {
+            this.contentDirty = true;
+            this.scheduleSave();
+        });
+        this.editor.notifier.on(EditorEventType.CommandUndone, () => {
+            this.contentDirty = true;
+            this.scheduleSave();
+        });
         
         // Viewport changes (pan/zoom) - saved in SVG's editorView attribute
         this.editor.notifier.on(EditorEventType.ViewportChanged, () => this.scheduleSave());
@@ -224,17 +252,18 @@ export class PluginEditor {
             this.drawingFile.setContent(serialized);
             await this.drawingFile.save();
 
-            try {
-                refreshImagesForFile(this.filename);
-            } catch (refreshError) {
-                console.warn('Image refresh failed, but save succeeded:', refreshError);
+            // Only broadcast refresh for content changes, not viewport-only saves
+            if (this.contentDirty) {
+                try {
+                    refreshImagesForFile(this.filename);
+                } catch (refreshError) {
+                    console.warn('Image refresh failed, but save succeeded:', refreshError);
+                }
             }
 
-            try {
-                await bumpSyncMarker();
-            } catch (syncError) {
-                console.warn('Sync marker update failed, but save succeeded:', syncError);
-            }
+            // Update tracking
+            this.lastSavedNormalized = PluginEditor.normalizeSVG(serialized);
+            this.contentDirty = false;
         } catch (error) {
             if(error instanceof InternationalizedError) {
                 ErrorReporter.error(error);

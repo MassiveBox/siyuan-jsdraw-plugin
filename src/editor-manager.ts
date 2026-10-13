@@ -12,6 +12,14 @@ interface OpenEditorEntry {
 const openEditors = new Map<HTMLElement, OpenEditorEntry>();
 export function hasOpenEditors(): boolean { return openEditors.size > 0; }
 
+export function getOpenEditors(): Map<string, PluginEditor> {
+    const result = new Map<string, PluginEditor>();
+    for (const [, entry] of openEditors) {
+        result.set(entry.editor.getFilename(), entry.editor);
+    }
+    return result;
+}
+
 const pendingLocks = new Map<string, EditorLock>();
 
 function releaseEditor(element: HTMLElement): void {

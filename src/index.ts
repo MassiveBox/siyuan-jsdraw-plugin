@@ -14,7 +14,7 @@ import {Analytics} from "@/analytics";
 import {ErrorReporter, MustSelectError, NotAWhiteboardError, MustOpenDocumentError} from "@/errors";
 import { confirmDialog } from '@/libs/dialog';
 import { setupRefreshListener, teardownRefreshListener, refreshAllSVGImages } from '@/refresh';
-import { updateImageColorInversionStyle } from '@/theme';
+import { overrideMaximumDialogWidth, updateImageColorInversionStyle } from '@/theme';
 import {PluginEditor} from "@/editor";
 import {getFileBlob} from "@/api";
 import {DATA_PATH, ASSETS_PATH} from "@/const";
@@ -29,6 +29,7 @@ export default class DrawJSPlugin extends Plugin {
 
         new ErrorReporter(this.i18n);
         loadIcons(this);
+        overrideMaximumDialogWidth();
         const copyFallback = this.i18n.copyFallback as any;
         initClipboardFallback(copyFallback.title, copyFallback.message, copyFallback.close);
         EditorManager.registerTab(this);

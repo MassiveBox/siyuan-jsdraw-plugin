@@ -22,6 +22,7 @@ export interface EditorOptions {
     background: string
     additionalPens: number
     sidebars: boolean
+    disableDialogResize: boolean
 }
 
 export class PluginConfig {
@@ -54,7 +55,8 @@ export class PluginConfig {
                 grid: getFirstDefined(jsonObj?.editorOptions?.grid, jsonObj?.grid, true),
                 background: getFirstDefined(jsonObj?.editorOptions?.background, jsonObj?.background, "#ffffff"),
                 additionalPens: getFirstDefined(jsonObj?.editorOptions?.additionalPens, DEFAULT_ADDITIONAL_PENS),
-                sidebars: getFirstDefined(jsonObj?.editorOptions?.sidebars, true)
+                sidebars: getFirstDefined(jsonObj?.editorOptions?.sidebars, true),
+                disableDialogResize: getFirstDefined(jsonObj?.editorOptions?.disableDialogResize, true),
             },
             imageColorInversion: getFirstDefined(jsonObj?.imageColorInversion, 'on-dark'),
         };
@@ -114,7 +116,8 @@ export class PluginConfigViewer {
                         : this.config.options.editorOptions.background,
                     restorePosition: !!data.restorePosition,
                     additionalPens: Math.max(0, Math.min(MAX_ADDITIONAL_PENS, isNaN(parsedAdditionalPens) ? DEFAULT_ADDITIONAL_PENS : parsedAdditionalPens)),
-                    sidebars: data.sidebars ?? true
+                    sidebars: data.sidebars ?? true,
+                    disableDialogResize: data.disableDialogResize ?? true
                 },
                 imageColorInversion: data.imageColorInversion,
             },
@@ -201,6 +204,14 @@ export class PluginConfigViewer {
             title: this.plugin.i18n.settings.dialogOnDesktop.title,
             description: this.plugin.i18n.settings.dialogOnDesktop.description,
             value: this.config.options.dialogOnDesktop,
+            type: 'checkbox'
+        });
+
+        this.settingUtils.addItem({
+            key: "disableDialogResize",
+            title: this.plugin.i18n.settings.disableDialogResize.title,
+            description: this.plugin.i18n.settings.disableDialogResize.description,
+            value: this.config.options.editorOptions.disableDialogResize,
             type: 'checkbox'
         });
 

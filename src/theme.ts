@@ -35,30 +35,47 @@ export function getSiYuanThemeCSS(): string | null {
     return `.imageEditorContainer { ${vars} }`;
 }
 
-export function updateImageColorInversionStyle(inversionMode: 'on-dark' | 'on-light' | 'disabled'): void {
-    const styleId = 'snippetCSS-jsdrawColorInversion';
-    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
-    
-    if (inversionMode === 'disabled') {
-        if (styleElement) {
-            styleElement.remove();
-        }
-        return;
-    }
-    
+function applyCustomStyle(styleID: string, css: string): void {
+    let styleElement = document.getElementById(styleID) as HTMLStyleElement;
+
     if (!styleElement) {
         styleElement = document.createElement('style');
-        styleElement.id = styleId;
+        styleElement.id = styleID;
         document.head.appendChild(styleElement);
     }
-    
-    const themeMode = inversionMode === 'on-dark' ? 'dark' : 'light';
-    const invertFactor = inversionMode === 'on-dark' ? 88.1 : 100;
+
+    styleElement.textContent = css;
+}
+
+export function updateImageColorInversionStyle(inversionMode: 'on-dark' | 'on-light' | 'disabled'): void {
+
+    let css = '';
+    if (inversionMode != 'disabled') {
+        const themeMode = inversionMode === 'on-dark' ? 'dark' : 'light';
+        const invertFactor = inversionMode === 'on-dark' ? 88.1 : 100;
+        css = `
+            html[data-theme-mode="${themeMode}"] img[src^="assets/jsdraw-"] {
+                filter: grayscale(0%) invert(${invertFactor}%) contrast(100%) brightness(100%) hue-rotate(180deg);
+            }
+        `;
+    }
+
+    applyCustomStyle('snippetCSS-jsdrawColorInversion', css);
+
+}
+
+export function overrideMaximumDialogWidth(): void {
     const css = `
-        html[data-theme-mode="${themeMode}"] img[src^="assets/jsdraw-"] {
-            filter: grayscale(0%) invert(${invertFactor}%) contrast(100%) brightness(100%) hue-rotate(180deg);
+        .b3-dialog:has(#DrawingPanel) {
+            align-items: flex-end;
+        }
+        .b3-dialog__container:has(#DrawingPanel) {
+            max-width: 100vw;
         }
     `;
-    
-    styleElement.textContent = css;
+    applyCustomStyle('snippetCSS-jsdrawCustomStyle', css);
+}
+
+export function isSiYuanTopBarDraggable(): boolean {
+    return navigator.userAgent.includes("Electron");
 }

@@ -3,6 +3,7 @@ import {PluginEditor} from "@/editor";
 import DrawJSPlugin from "@/index";
 import {ErrorReporter, LockBlockedError, NoFilenameError} from "@/errors";
 import {EditorLock} from "@/lock";
+import { isSiYuanTopBarDraggable } from "./theme";
 
 interface OpenEditorEntry {
     editor: PluginEditor;
@@ -64,14 +65,14 @@ export class EditorManager {
                 try {
                     const editor = await PluginEditor.create(filename, p.config.options.editorOptions, p.i18n);
                     this.element.appendChild(editor.getElement());
-                    openEditors.set(this.element, { editor, lock });
+                    openEditors.set(this.element as any, { editor, lock });
                 }catch (error){
                     lock.release();
                     ErrorReporter.error(error);
                 }
             },
             beforeDestroy() {
-                releaseEditor(this.element);
+                releaseEditor(this.element as any);
             }
         });
     }
@@ -102,9 +103,13 @@ export class EditorManager {
             return;
         }
         openEditors.set(editor.getElement(), { editor, lock });
+
+        const topBarHeight = isSiYuanTopBarDraggable() ?
+            (document.getElementById("toolbar")?.clientHeight || 32) : 0;
+
         const dialog = new Dialog({
             width: "100vw",
-            height: getFrontend() == "mobile" ? "100vh" : "90vh",
+            height: `calc(100vh - ${topBarHeight}px)`,
             content: `<div id="DrawingPanel" style="width:100%; height: 100%;"></div>`,
             disableClose: true,
             destroyCallback: () => {
@@ -115,6 +120,10 @@ export class EditorManager {
             dialog.destroy();
         });
         dialog.element.querySelector("#DrawingPanel").appendChild(editor.getElement());
+        if(p.config.options.editorOptions.disableDialogResize) {
+            dialog.element.querySelectorAll('[class*="resize__"]').forEach((el) => el.remove());
+        }
+    
     }
 
     async open(p: DrawJSPlugin) {

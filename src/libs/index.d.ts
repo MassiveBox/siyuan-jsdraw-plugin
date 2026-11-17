@@ -6,12 +6,13 @@
  * @LastEditTime : 2024-04-30 16:39:54
  * @Description  : 
  */
-type TSettingItemType = "checkbox" | "select" | "textinput" | "textarea" | "number" | "slider" | "button" | "hint" | "custom";
+type TSettingItemType = "checkbox" | "select" | "textinput" | "textarea" | "number" | "slider" | "button" | "hint" | "custom" | "color";
 
 interface ISettingItemCore {
     type: TSettingItemType;
     key: string;
     value: any;
+    defaultValue?: any;
     placeholder?: string;
     slider?: {
         min: number;
@@ -31,7 +32,6 @@ interface ISettingItem extends ISettingItemCore {
     direction?: "row" | "column";
 }
 
-
 //Interface for setting-utils
 interface ISettingUtilsItem extends ISettingItem {
     action?: {
@@ -41,3 +41,4 @@ interface ISettingUtilsItem extends ISettingItem {
     getEleVal?: (ele: HTMLElement) => any;
     setEleVal?: (ele: HTMLElement, val: any) => void;
 }
+

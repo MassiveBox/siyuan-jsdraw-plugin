@@ -74,14 +74,6 @@ export function imgSrcToFilename(imgSrc: string | null): string | null {
 
 }
 
-export function getFirstDefined(...a) {
-    for(let i = 0; i < a.length; i++) {
-        if(a[i] !== undefined) {
-            return a[i];
-        }
-    }
-}
-
 export interface CopyFallbackOptions {
     title: string;
     message: string;

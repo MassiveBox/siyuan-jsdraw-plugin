@@ -9,7 +9,8 @@ import {
     imgSrcToFilename} from "@/helper";
 import {extractPdfAssetPath, importPdfAsset} from "@/pdf-import";
 import {EditorManager, getOpenEditors} from "@/editor-manager";
-import {PluginConfig, PluginConfigViewer} from "@/config";
+import {PluginConfig} from "@/config";
+import {openSettingsDialog} from "@/settings-dialog";
 import {Analytics} from "@/analytics";
 import {ErrorReporter, MustSelectError, NotAWhiteboardError, MustOpenDocumentError} from "@/errors";
 import { confirmDialog } from '@/libs/dialog';
@@ -132,6 +133,10 @@ export default class DrawJSPlugin extends Plugin {
 
     }
 
+    openSetting(): void {
+        openSettingsDialog(this);
+    }
+
     onunload() {
         teardownRefreshListener(this);
         void this.analytics.sendEvent("unload");
@@ -240,8 +245,6 @@ export default class DrawJSPlugin extends Plugin {
     private async startConfig() {
         this.config = new PluginConfig();
         await this.config.load();
-        let configViewer = new PluginConfigViewer(this.config, this);
-        await configViewer.load();
         updateImageColorInversionStyle(this.config.options.imageColorInversion);
     }
 

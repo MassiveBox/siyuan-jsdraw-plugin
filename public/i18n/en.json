@@ -18,7 +18,7 @@
     "notAWhiteboard": "You must select a whiteboard, not a regular image. <a href='https://s.boxo.cc/jsdraw-plugin-instructions'>Usage instructions</a>",
     "syncIDNotFound": "Couldn't find SyncID in document for drawing, make sure you're trying to edit a whiteboard that is included in at least a note.",
     "createUnknown": "Unknown error while creating editor, please try again.",
-    "invalidBackgroundColor": "Invalid background color! Please enter an HEX color, like #000000 (black) or #FFFFFF (white). The old background color will be used.",
+    "invalidBackgroundColor": "Invalid background color! Please enter a HEX color, like #000000 (black) or #FFFFFF (white).",
     "multipleSyncIDs": "Multiple syncIDs found in documents. Remove the drawings that don't exist from your documents.\n Sync conflict copies can cause this error, so make sure to delete them.\nFile IDs (the part you can change in the Rename menu) must be unique across all documents.\n<a href='https://git.boxo.cc/massivebox/siyuan-jsdraw-plugin/wiki/Errors-and-Fixes#multiple-syncids-found'>Full explanation</a>",
     "unchangedProtyle": "Make sure the image you're trying to edit still exists in your documents.",
     "saveGeneric": "Error saving! The current drawing has been copied to your clipboard. You may need to create a new drawing and paste it there.",
@@ -48,10 +48,6 @@
     "backgroundDropdown":{
       "title": "Background color",
       "description": "Default background color for new whiteboards."
-    },
-    "background": {
-      "title": "Custom background",
-      "description": "Hexadecimal code of the custom background color for new whiteboards.<br /><b>This setting is only applied if \"Background Color\" is set to \"Custom\"!</b>"
     },
     "dialogOnDesktop": {
       "title": "Open editor as dialog on desktop",
@@ -94,6 +90,18 @@
     "additionalPens": {
       "title": "Additional pens",
       "description": "Number of additional pens (beyond the default 3) to show in the toolbar."
+    },
+    "ui": {
+      "groups": {
+        "general": "General",
+        "editor": "Editor"
+      },
+      "default": "Default",
+      "on": "On",
+      "off": "Off",
+      "reset": "Reset all",
+      "resetConfirmTitle": "Reset all settings?",
+      "resetConfirmMessage": "All settings will be restored to their default values. Click Confirm in the settings dialog to save the changes."
     }
   },
   "stylusSettings": {

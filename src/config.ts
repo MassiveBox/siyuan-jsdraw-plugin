@@ -1,5 +1,5 @@
 import {PluginFile} from "@/file";
-import {CONFIG_FILENAME, JSON_MIME, STORAGE_PATH} from "@/const";
+import {CONFIG_FILENAME, JSON_MIME, PLUGIN_VERSION, STORAGE_PATH} from "@/const";
 import {buildOptions} from '@/config-schema';
 
 import type { Options } from '@/config-schema';
@@ -12,8 +12,13 @@ export class PluginConfig {
 
     options: Options;
     private firstRun: boolean = false;
+    private upgraded: boolean = false;
+    /** Version recorded in conf.json. */
+    private savedVersion: string | null = null;
 
     getFirstRun() { return this.firstRun }
+
+    isUpgraded() { return this.upgraded }
 
     constructor() {
         this.file = new PluginFile(STORAGE_PATH, CONFIG_FILENAME, JSON_MIME);
@@ -23,6 +28,9 @@ export class PluginConfig {
         const stored = await this.readConfigFile();
         this.options = buildOptions(stored);
         this.firstRun = stored == null;
+        
+        this.savedVersion = stored?.version;
+        this.upgraded = this.savedVersion !== PLUGIN_VERSION;
     }
 
     private async readConfigFile(): Promise<any | null> {
@@ -39,8 +47,15 @@ export class PluginConfig {
     }
 
     async save() {
-        this.file.setContent(JSON.stringify(this.options));
+        this.file.setContent(JSON.stringify({...this.options, version: this.savedVersion}));
         await this.file.save();
+    }
+
+    /** Mark the detected upgrade as handled and stamp conf.json with the current version. */
+    async acknowledgeUpgrade() {
+        this.upgraded = false;
+        this.savedVersion = PLUGIN_VERSION;
+        await this.save();
     }
 
     setOptions(options: Options) {

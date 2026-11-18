@@ -37,6 +37,10 @@ export default class DrawJSPlugin extends Plugin {
         setupRefreshListener(this);
 
         await this.startConfig();
+        if (this.config.isUpgraded()) {
+            // TODO(update-notification)
+            await this.config.acknowledgeUpgrade();
+        }
         await this.startAnalytics();
 
         // keep track of last active protyle, for edit/create shortcut

@@ -1,5 +1,5 @@
 import {getBackend, getFrontend} from "siyuan";
-import packageJson from '../package.json' assert { type: 'json' };
+import {PLUGIN_VERSION} from "@/const";
 
 export class Analytics {
 
@@ -19,7 +19,7 @@ export class Analytics {
         const sendData: Record<string, string> = (name == 'load' || name == 'install') ?
             {
                 'appVersion': window.navigator.userAgent.split(' ')[0],
-                'pluginVersion': packageJson.version,
+                'pluginVersion': PLUGIN_VERSION,
                 'frontend': getFrontend(),
                 'backend': getBackend(),
                 'language': navigator.language,

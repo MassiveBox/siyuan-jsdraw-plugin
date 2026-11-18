@@ -1,3 +1,7 @@
+import packageJson from '../package.json' assert { type: 'json' };
+
+export const PLUGIN_VERSION = packageJson.version;
+
 export const SVG_MIME = "image/svg+xml";
 export const JSON_MIME = "application/json";
 export const DATA_PATH = "/data/";
